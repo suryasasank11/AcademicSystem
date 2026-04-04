@@ -1,0 +1,112 @@
+{% extends 'base.html' %}
+{% block title %}{{ profile_user.get_full_name }}{% endblock %}
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'accounts:user_list' %}">Users</a></li>
+<li class="breadcrumb-item active">{{ profile_user.get_full_name }}</li>
+{% endblock %}
+{% block page_header %}
+<div class="page-header">
+  <h1 class="page-title"><i class="fas fa-user me-2"></i>{{ profile_user.get_full_name }}</h1>
+  <div class="page-actions">
+    <a href="{% url 'accounts:user_edit' profile_user.pk %}" class="btn btn-primary"><i class="fas fa-edit me-1"></i>Edit</a>
+    <a href="{% url 'accounts:user_list' %}" class="btn btn-outline-secondary"><i class="fas fa-arrow-left me-1"></i>Back</a>
+  </div>
+</div>
+{% endblock %}
+{% block content %}
+<div class="row g-4">
+  <div class="col-lg-4">
+    <div class="card shadow-sm text-center p-4">
+      {% if profile_user.profile_photo %}
+        <img src="{{ profile_user.profile_photo.url }}" class="rounded-circle mb-3 mx-auto" style="width:100px;height:100px;object-fit:cover;">
+      {% else %}
+        <div class="avatar-lg mx-auto mb-3">{{ profile_user.get_initials }}</div>
+      {% endif %}
+      <h5 class="fw-bold">{{ profile_user.get_full_name }}</h5>
+      <span class="badge badge-role-{{ profile_user.role }} mb-2">{{ profile_user.get_role_display }}</span>
+      <p class="text-muted small mb-1">{{ profile_user.email }}</p>
+      {% if profile_user.phone %}<p class="text-muted small mb-1">{{ profile_user.phone }}</p>{% endif %}
+      <hr>
+      {% if profile_user.is_active %}
+        <span class="badge bg-success">Active</span>
+      {% else %}
+        <span class="badge bg-danger">Inactive</span>
+      {% endif %}
+      <p class="text-muted small mt-2 mb-0">Joined {{ profile_user.date_joined|date:"M d, Y" }}</p>
+    </div>
+
+    {% if student_profile %}
+    <div class="card shadow-sm mt-3">
+      <div class="card-header"><h6 class="mb-0">Student Info</h6></div>
+      <div class="card-body">
+        <table class="table table-sm table-borderless mb-0">
+          <tr><td class="text-muted">ID</td><td><strong>{{ student_profile.student_id }}</strong></td></tr>
+          <tr><td class="text-muted">Dept</td><td>{{ student_profile.department|default:"—" }}</td></tr>
+          <tr><td class="text-muted">Year</td><td>{{ student_profile.get_year_of_study_display }}</td></tr>
+          <tr><td class="text-muted">GPA</td><td><strong>{{ student_profile.gpa }}</strong></td></tr>
+          <tr><td class="text-muted">Status</td><td><span class="badge bg-success">{{ student_profile.get_status_display }}</span></td></tr>
+        </table>
+      </div>
+    </div>
+    {% endif %}
+
+    {% if professor_profile %}
+    <div class="card shadow-sm mt-3">
+      <div class="card-header"><h6 class="mb-0">Professor Info</h6></div>
+      <div class="card-body">
+        <table class="table table-sm table-borderless mb-0">
+          <tr><td class="text-muted">ID</td><td><strong>{{ professor_profile.employee_id }}</strong></td></tr>
+          <tr><td class="text-muted">Dept</td><td>{{ professor_profile.department|default:"—" }}</td></tr>
+          <tr><td class="text-muted">Rank</td><td>{{ professor_profile.get_rank_display }}</td></tr>
+          <tr><td class="text-muted">Office</td><td>{{ professor_profile.office_location|default:"—" }}</td></tr>
+        </table>
+      </div>
+    </div>
+    {% endif %}
+  </div>
+
+  <div class="col-lg-8">
+    {% if enrollments %}
+    <div class="card shadow-sm mb-4">
+      <div class="card-header"><h6 class="mb-0"><i class="fas fa-book me-2"></i>Recent Enrollments</h6></div>
+      <div class="table-responsive">
+        <table class="table table-hover mb-0">
+          <thead class="table-light"><tr><th>Course</th><th>Semester</th><th>Status</th><th>Date</th></tr></thead>
+          <tbody>
+            {% for e in enrollments %}
+            <tr>
+              <td><a href="{% url 'courses:detail' e.course.pk %}">{{ e.course.course_code }} — {{ e.course.title }}</a></td>
+              <td>{{ e.course.semester }} {{ e.course.academic_year }}</td>
+              <td><span class="badge bg-{% if e.status == 'enrolled' %}success{% else %}secondary{% endif %}">{{ e.get_status_display }}</span></td>
+              <td class="text-muted small">{{ e.enrollment_date|date:"M d, Y" }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+    {% endif %}
+
+    {% if courses %}
+    <div class="card shadow-sm">
+      <div class="card-header"><h6 class="mb-0"><i class="fas fa-chalkboard me-2"></i>Teaching Courses</h6></div>
+      <div class="table-responsive">
+        <table class="table table-hover mb-0">
+          <thead class="table-light"><tr><th>Course</th><th>Semester</th><th>Enrolled</th><th>Status</th></tr></thead>
+          <tbody>
+            {% for c in courses %}
+            <tr>
+              <td><a href="{% url 'courses:detail' c.pk %}">{{ c.course_code }} — {{ c.title }}</a></td>
+              <td>{{ c.semester }} {{ c.academic_year }}</td>
+              <td>{{ c.enrolled_count }}/{{ c.max_students }}</td>
+              <td><span class="badge bg-success">{{ c.get_status_display }}</span></td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

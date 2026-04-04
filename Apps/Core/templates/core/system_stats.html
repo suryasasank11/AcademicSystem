@@ -1,0 +1,62 @@
+{% extends 'base.html' %}
+{% block title %}System Stats{% endblock %}
+{% block breadcrumb %}<li class="breadcrumb-item active">System Stats</li>{% endblock %}
+{% block page_header %}
+<div class="page-header">
+  <h1 class="page-title"><i class="fas fa-chart-bar me-2"></i>System Statistics</h1>
+</div>
+{% endblock %}
+{% block content %}
+<div class="row g-4">
+  <div class="col-md-6 col-lg-3">
+    <div class="card shadow-sm"><div class="card-header bg-primary text-white"><h6 class="mb-0">Users</h6></div>
+      <div class="card-body">
+        <table class="table table-sm mb-0">
+          <tr><td>Total</td><td class="fw-bold text-end">{{ stats.users.total }}</td></tr>
+          <tr><td>Active</td><td class="fw-bold text-end text-success">{{ stats.users.active }}</td></tr>
+          <tr><td>Students</td><td class="fw-bold text-end">{{ stats.users.students }}</td></tr>
+          <tr><td>Professors</td><td class="fw-bold text-end">{{ stats.users.professors }}</td></tr>
+          <tr><td>Admins</td><td class="fw-bold text-end">{{ stats.users.admins }}</td></tr>
+        </table>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-6 col-lg-3">
+    <div class="card shadow-sm"><div class="card-header bg-success text-white"><h6 class="mb-0">Academic</h6></div>
+      <div class="card-body">
+        <table class="table table-sm mb-0">
+          <tr><td>Departments</td><td class="fw-bold text-end">{{ stats.academic.departments }}</td></tr>
+          <tr><td>Total Courses</td><td class="fw-bold text-end">{{ stats.academic.courses }}</td></tr>
+          <tr><td>Active Courses</td><td class="fw-bold text-end text-success">{{ stats.academic.active_courses }}</td></tr>
+          <tr><td>Total Enrollments</td><td class="fw-bold text-end">{{ stats.academic.enrollments }}</td></tr>
+          <tr><td>Active Enrollments</td><td class="fw-bold text-end">{{ stats.academic.active_enrollments }}</td></tr>
+        </table>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-6 col-lg-3">
+    <div class="card shadow-sm"><div class="card-header bg-warning text-dark"><h6 class="mb-0">Assessments</h6></div>
+      <div class="card-body">
+        <table class="table table-sm mb-0">
+          <tr><td>Assignments</td><td class="fw-bold text-end">{{ stats.assessment.assignments }}</td></tr>
+          <tr><td>Submissions</td><td class="fw-bold text-end">{{ stats.assessment.submissions }}</td></tr>
+          <tr><td>Graded</td><td class="fw-bold text-end text-success">{{ stats.assessment.graded_submissions }}</td></tr>
+          <tr><td>Total Grades</td><td class="fw-bold text-end">{{ stats.assessment.grades }}</td></tr>
+          <tr><td>Finalized</td><td class="fw-bold text-end">{{ stats.assessment.finalized_grades }}</td></tr>
+        </table>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-6 col-lg-3">
+    <div class="card shadow-sm"><div class="card-header bg-info text-white"><h6 class="mb-0">Attendance</h6></div>
+      <div class="card-body">
+        <table class="table table-sm mb-0">
+          <tr><td>Sessions</td><td class="fw-bold text-end">{{ stats.attendance.sessions }}</td></tr>
+          <tr><td>Records</td><td class="fw-bold text-end">{{ stats.attendance.records }}</td></tr>
+          <tr><td>Present</td><td class="fw-bold text-end text-success">{{ stats.attendance.present_records }}</td></tr>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

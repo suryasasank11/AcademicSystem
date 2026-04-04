@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+{% block title %}Delete User{% endblock %}
+{% block page_header %}
+<div class="page-header">
+  <h1 class="page-title text-danger"><i class="fas fa-trash me-2"></i>Delete User</h1>
+</div>
+{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-md-6">
+    <div class="card shadow-sm border-danger">
+      <div class="card-body p-4 text-center">
+        <i class="fas fa-exclamation-triangle fa-3x text-danger mb-3"></i>
+        <h5>Are you sure you want to delete <strong>{{ object.get_full_name }}</strong>?</h5>
+        <p class="text-muted">This action cannot be undone. All associated data (enrollments, grades, submissions) will be deleted.</p>
+        <form method="post" class="d-flex gap-2 justify-content-center mt-4">
+          {% csrf_token %}
+          <button type="submit" class="btn btn-danger"><i class="fas fa-trash me-1"></i>Yes, Delete</button>
+          <a href="{% url 'accounts:user_list' %}" class="btn btn-outline-secondary">Cancel</a>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,155 @@
+{% extends 'base.html' %}
+{% block title %}{{ action }} User{% endblock %}
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'accounts:user_list' %}">Users</a></li>
+<li class="breadcrumb-item active">{{ action }}</li>
+{% endblock %}
+{% block page_header %}
+<div class="page-header">
+  <h1 class="page-title"><i class="fas fa-user-edit me-2"></i>{{ action }} User</h1>
+</div>
+{% endblock %}
+{% block content %}
+<div class="row g-4">
+  <div class="col-lg-8">
+    <div class="card shadow-sm">
+      <div class="card-header"><h6 class="mb-0">User Account</h6></div>
+      <div class="card-body">
+        <form method="post" enctype="multipart/form-data" novalidate id="userForm">
+          {% csrf_token %}
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label fw-semibold">First Name *</label>
+              {{ form.first_name }}
+              {% if form.first_name.errors %}<div class="invalid-feedback d-block">{{ form.first_name.errors.0 }}</div>{% endif %}
+            </div>
+            <div class="col-md-6">
+              <label class="form-label fw-semibold">Last Name *</label>
+              {{ form.last_name }}
+              {% if form.last_name.errors %}<div class="invalid-feedback d-block">{{ form.last_name.errors.0 }}</div>{% endif %}
+            </div>
+            <div class="col-md-8">
+              <label class="form-label fw-semibold">Email *</label>
+              {{ form.email }}
+              {% if form.email.errors %}<div class="invalid-feedback d-block">{{ form.email.errors.0 }}</div>{% endif %}
+            </div>
+            <div class="col-md-4">
+              <label class="form-label fw-semibold">Role *</label>
+              {{ form.role }}
+            </div>
+            {% if form.password1 %}
+            <div class="col-md-6">
+              <label class="form-label fw-semibold">Password *</label>
+              {{ form.password1 }}
+              {% if form.password1.errors %}<div class="invalid-feedback d-block">{{ form.password1.errors.0 }}</div>{% endif %}
+            </div>
+            <div class="col-md-6">
+              <label class="form-label fw-semibold">Confirm Password *</label>
+              {{ form.password2 }}
+              {% if form.password2.errors %}<div class="invalid-feedback d-block">{{ form.password2.errors.0 }}</div>{% endif %}
+            </div>
+            {% endif %}
+            <div class="col-md-6">
+              <label class="form-label fw-semibold">Phone</label>
+              {{ form.phone }}
+            </div>
+            <div class="col-md-6">
+              <label class="form-label fw-semibold">Date of Birth</label>
+              {{ form.date_of_birth }}
+            </div>
+            <div class="col-12">
+              <label class="form-label fw-semibold">Bio</label>
+              {{ form.bio }}
+            </div>
+            <div class="col-12">
+              <label class="form-label fw-semibold">Profile Photo</label>
+              {{ form.profile_photo }}
+            </div>
+            {% if form.is_active %}
+            <div class="col-12">
+              <div class="form-check">
+                {{ form.is_active }}
+                <label class="form-check-label" for="{{ form.is_active.id_for_label }}">Active Account</label>
+              </div>
+            </div>
+            {% endif %}
+          </div>
+
+          <!-- Role-specific profile section -->
+          <div id="studentProfileSection" style="display:none;">
+            <hr><h6 class="text-muted">Student Profile</h6>
+            <div class="row g-3">
+              {% if student_form %}
+                <div class="col-md-6">
+                  <label class="form-label">Student ID</label>
+                  {{ student_form.student_id }}
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label">Department</label>
+                  {{ student_form.department }}
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label">Year</label>
+                  {{ student_form.year_of_study }}
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label">Status</label>
+                  {{ student_form.status }}
+                </div>
+              {% endif %}
+            </div>
+          </div>
+
+          <div id="professorProfileSection" style="display:none;">
+            <hr><h6 class="text-muted">Professor Profile</h6>
+            <div class="row g-3">
+              {% if professor_form %}
+                <div class="col-md-6">
+                  <label class="form-label">Employee ID</label>
+                  {{ professor_form.employee_id }}
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label">Department</label>
+                  {{ professor_form.department }}
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label">Rank</label>
+                  {{ professor_form.rank }}
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label">Specialization</label>
+                  {{ professor_form.specialization }}
+                </div>
+              {% endif %}
+            </div>
+          </div>
+
+          {% if form.non_field_errors %}
+            <div class="alert alert-danger mt-3">{{ form.non_field_errors.0 }}</div>
+          {% endif %}
+
+          <div class="d-flex gap-2 mt-4">
+            <button type="submit" class="btn btn-primary"><i class="fas fa-save me-1"></i>Save User</button>
+            <a href="{% url 'accounts:user_list' %}" class="btn btn-outline-secondary">Cancel</a>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function updateProfileSections() {
+  const role = document.getElementById('id_role')?.value;
+  document.getElementById('studentProfileSection').style.display = role === 'student' ? '' : 'none';
+  document.getElementById('professorProfileSection').style.display = role === 'professor' ? '' : 'none';
+}
+const roleSelect = document.getElementById('id_role');
+if (roleSelect) {
+  roleSelect.addEventListener('change', updateProfileSections);
+  updateProfileSections();
+}
+</script>
+{% endblock %}

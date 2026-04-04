@@ -1,0 +1,77 @@
+{% extends 'base.html' %}
+{% block title %}Search: {{ query }}{% endblock %}
+{% block breadcrumb %}<li class="breadcrumb-item active">Search</li>{% endblock %}
+{% block page_header %}
+<div class="page-header">
+  <h1 class="page-title"><i class="fas fa-search me-2"></i>Search Results</h1>
+</div>
+{% endblock %}
+{% block content %}
+{% if query %}
+  <p class="text-muted mb-4">Results for: <strong>"{{ query }}"</strong></p>
+  {% if results %}
+    {% if results.courses %}
+    <div class="card shadow-sm mb-4">
+      <div class="card-header"><h6 class="mb-0"><i class="fas fa-book-open me-2"></i>Courses</h6></div>
+      <div class="list-group list-group-flush">
+        {% for c in results.courses %}
+        <a href="{% url 'courses:detail' c.pk %}" class="list-group-item list-group-item-action">
+          <strong>{{ c.course_code }}</strong> — {{ c.title }}
+          <span class="text-muted small ms-2">{{ c.semester }} {{ c.academic_year }}</span>
+        </a>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+    {% if results.users %}
+    <div class="card shadow-sm mb-4">
+      <div class="card-header"><h6 class="mb-0"><i class="fas fa-users me-2"></i>Users</h6></div>
+      <div class="list-group list-group-flush">
+        {% for u in results.users %}
+        <a href="{% url 'accounts:user_detail' u.pk %}" class="list-group-item list-group-item-action d-flex justify-content-between">
+          <span><strong>{{ u.get_full_name }}</strong> <span class="text-muted">— {{ u.email }}</span></span>
+          <span class="badge badge-role-{{ u.role }}">{{ u.get_role_display }}</span>
+        </a>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+    {% if results.students %}
+    <div class="card shadow-sm mb-4">
+      <div class="card-header"><h6 class="mb-0"><i class="fas fa-user-graduate me-2"></i>Students</h6></div>
+      <div class="list-group list-group-flush">
+        {% for s in results.students %}
+        <a href="{% url 'accounts:user_detail' s.user.pk %}" class="list-group-item list-group-item-action d-flex justify-content-between">
+          <span><strong>{{ s.user.get_full_name }}</strong></span>
+          <span class="text-muted small">{{ s.student_id }}</span>
+        </a>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+    {% if results.assignments %}
+    <div class="card shadow-sm mb-4">
+      <div class="card-header"><h6 class="mb-0"><i class="fas fa-tasks me-2"></i>Assignments</h6></div>
+      <div class="list-group list-group-flush">
+        {% for a in results.assignments %}
+        <a href="{% url 'assignments:detail' a.pk %}" class="list-group-item list-group-item-action d-flex justify-content-between">
+          <span><strong>{{ a.title }}</strong> <span class="text-muted">— {{ a.course.course_code }}</span></span>
+          <span class="text-muted small">Due {{ a.due_date|date:"M d" }}</span>
+        </a>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+  {% else %}
+    <div class="text-center text-muted py-5">
+      <i class="fas fa-search fa-3x mb-3"></i>
+      <p>No results found for "{{ query }}".</p>
+    </div>
+  {% endif %}
+{% else %}
+  <div class="text-center text-muted py-5">
+    <i class="fas fa-search fa-3x mb-3"></i>
+    <p>Enter a search term to get started.</p>
+  </div>
+{% endif %}
+{% endblock %}

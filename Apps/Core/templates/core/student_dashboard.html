@@ -1,0 +1,209 @@
+{% extends 'base.html' %}
+{% block title %}Student Dashboard{% endblock %}
+{% block breadcrumb %}<li class="breadcrumb-item active">Dashboard</li>{% endblock %}
+
+{% block page_header %}
+<div class="page-header">
+  <h1 class="page-title">
+    <i class="fas fa-user-graduate me-2"></i>
+    Welcome, {{ request.user.get_short_name }}
+  </h1>
+  <div class="page-actions">
+    <a href="{% url 'courses:self_enroll' %}" class="btn btn-primary"><i class="fas fa-plus-circle me-1"></i>Enroll in Course</a>
+  </div>
+</div>
+{% endblock %}
+
+{% block content %}
+
+{% if error %}
+<div class="alert alert-warning"><i class="fas fa-exclamation-triangle me-2"></i>{{ error }}</div>
+{% else %}
+
+<!-- Stats -->
+<div class="row g-3 mb-4">
+  <div class="col-6 col-md-3">
+    <div class="stat-card stat-card-primary">
+      <div class="stat-icon"><i class="fas fa-book-open"></i></div>
+      <div class="stat-value">{{ stats.enrolled_courses }}</div>
+      <div class="stat-label">Enrolled Courses</div>
+    </div>
+  </div>
+  <div class="col-6 col-md-3">
+    <div class="stat-card stat-card-success">
+      <div class="stat-icon"><i class="fas fa-star"></i></div>
+      <div class="stat-value">{{ stats.gpa|floatformat:2 }}</div>
+      <div class="stat-label">Current GPA</div>
+      <a href="{% url 'grades:student_report' %}" class="stat-link">Details →</a>
+    </div>
+  </div>
+  <div class="col-6 col-md-3">
+    <div class="stat-card stat-card-warning">
+      <div class="stat-icon"><i class="fas fa-clock"></i></div>
+      <div class="stat-value">{{ stats.upcoming_assignments }}</div>
+      <div class="stat-label">Due This Week</div>
+      <a href="{% url 'assignments:list' %}" class="stat-link">View →</a>
+    </div>
+  </div>
+  <div class="col-6 col-md-3">
+    <div class="stat-card {% if stats.overdue_count > 0 %}stat-card-danger{% else %}stat-card-success{% endif %}">
+      <div class="stat-icon"><i class="fas fa-exclamation-circle"></i></div>
+      <div class="stat-value">{{ stats.overdue_count }}</div>
+      <div class="stat-label">Overdue</div>
+    </div>
+  </div>
+</div>
+
+<div class="row g-4">
+
+  <!-- Enrolled Courses & Attendance -->
+  <div class="col-lg-7">
+    <div class="card shadow-sm mb-4">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <h6 class="mb-0"><i class="fas fa-book-open me-2"></i>My Courses</h6>
+        <a href="{% url 'courses:list' %}" class="btn btn-sm btn-outline-primary">Browse</a>
+      </div>
+      {% if attendance_data %}
+      <div class="card-body p-0">
+        <div class="table-responsive">
+          <table class="table table-hover align-middle mb-0">
+            <thead class="table-light"><tr><th>Course</th><th>Professor</th><th>Attendance</th><th>Grade</th></tr></thead>
+            <tbody>
+              {% for item in attendance_data %}
+              <tr>
+                <td>
+                  <a href="{% url 'courses:detail' item.enrollment.course.pk %}" class="fw-semibold text-decoration-none">
+                    {{ item.enrollment.course.course_code }}
+                  </a>
+                  <div class="text-muted small">{{ item.enrollment.course.title|truncatechars:30 }}</div>
+                </td>
+                <td class="text-muted small">{{ item.enrollment.course.professor.get_full_name }}</td>
+                <td>
+                  <div class="d-flex align-items-center gap-2">
+                    <div class="progress flex-grow-1" style="height:6px;min-width:60px;">
+                      <div class="progress-bar bg-{% if item.percentage >= 75 %}success{% elif item.percentage >= 50 %}warning{% else %}danger{% endif %}"
+                           style="width:{{ item.percentage }}%"></div>
+                    </div>
+                    <span class="small text-muted">{{ item.percentage }}%</span>
+                  </div>
+                </td>
+                <td>
+                  {% if item.enrollment.final_grade %}
+                    <span class="badge bg-{% if item.enrollment.final_grade.letter_grade.0 == 'A' %}success{% elif item.enrollment.final_grade.letter_grade.0 == 'B' %}primary{% elif item.enrollment.final_grade.letter_grade.0 == 'C' %}warning{% else %}danger{% endif %}">
+                      {{ item.enrollment.final_grade.letter_grade|default:"—" }}
+                    </span>
+                  {% else %}
+                    <span class="text-muted">—</span>
+                  {% endif %}
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+      {% else %}
+      <div class="card-body text-center py-5 text-muted">
+        <i class="fas fa-book-open fa-3x mb-3"></i>
+        <p>You're not enrolled in any courses yet.</p>
+        <a href="{% url 'courses:self_enroll' %}" class="btn btn-primary">Enroll Now</a>
+      </div>
+      {% endif %}
+    </div>
+
+    <!-- Overdue Assignments -->
+    {% if overdue_assignments %}
+    <div class="card shadow-sm border-danger">
+      <div class="card-header bg-danger bg-opacity-10">
+        <h6 class="mb-0 text-danger"><i class="fas fa-exclamation-circle me-2"></i>Overdue Assignments</h6>
+      </div>
+      <div class="list-group list-group-flush">
+        {% for a in overdue_assignments %}
+        <a href="{% url 'assignments:submit' a.pk %}" class="list-group-item list-group-item-action py-2">
+          <div class="d-flex justify-content-between">
+            <span class="fw-semibold small text-danger">{{ a.title|truncatechars:40 }}</span>
+            <span class="badge bg-danger">{{ a.due_date|date:"M d" }}</span>
+          </div>
+          <div class="text-muted" style="font-size:11px;">{{ a.course.course_code }} · {{ a.max_score }} pts</div>
+        </a>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- Right Column -->
+  <div class="col-lg-5">
+
+    <!-- Upcoming Assignments -->
+    <div class="card shadow-sm mb-4">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <h6 class="mb-0"><i class="fas fa-calendar-alt me-2"></i>Due This Week</h6>
+        <a href="{% url 'assignments:list' %}" class="btn btn-sm btn-outline-primary">All</a>
+      </div>
+      <div class="list-group list-group-flush">
+        {% for a in upcoming_assignments %}
+        <a href="{% url 'assignments:detail' a.pk %}" class="list-group-item list-group-item-action py-2">
+          <div class="d-flex justify-content-between align-items-start">
+            <span class="fw-semibold small">{{ a.title|truncatechars:32 }}</span>
+            <span class="badge bg-{{ a.due_date_badge_class }} ms-1">{{ a.due_date|date:"M d" }}</span>
+          </div>
+          <div class="text-muted" style="font-size:11px;">{{ a.course.course_code }} · {{ a.max_score }} pts</div>
+        </a>
+        {% empty %}
+        <div class="list-group-item text-success text-center py-3">
+          <i class="fas fa-check-circle me-1"></i>No upcoming deadlines!
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <!-- Recent Grades -->
+    <div class="card shadow-sm mb-4">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <h6 class="mb-0"><i class="fas fa-chart-line me-2"></i>Recent Grades</h6>
+        <a href="{% url 'grades:student_report' %}" class="btn btn-sm btn-outline-success">All</a>
+      </div>
+      <div class="list-group list-group-flush">
+        {% for g in grades %}
+        <div class="list-group-item py-2">
+          <div class="d-flex justify-content-between">
+            <span class="small fw-semibold">{{ g.enrollment.course.course_code }}</span>
+            <span class="badge bg-{% if g.letter_grade.0 == 'A' %}success{% elif g.letter_grade.0 == 'B' %}primary{% elif g.letter_grade.0 == 'C' %}warning{% else %}danger{% endif %}">
+              {{ g.letter_grade|default:"Pending" }}
+            </span>
+          </div>
+          {% if g.numeric_score %}
+          <div class="text-muted" style="font-size:11px;">{{ g.numeric_score }}% · {{ g.grade_points }} pts</div>
+          {% endif %}
+        </div>
+        {% empty %}
+        <div class="list-group-item text-muted text-center py-3">No grades yet.</div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <!-- Announcements -->
+    <div class="card shadow-sm">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <h6 class="mb-0"><i class="fas fa-bullhorn me-2"></i>Announcements</h6>
+        <a href="{% url 'courses:announcement_list' %}" class="btn btn-sm btn-outline-primary">All</a>
+      </div>
+      <div class="list-group list-group-flush">
+        {% for ann in recent_announcements %}
+        <a href="{% url 'courses:announcement_detail' ann.pk %}" class="list-group-item list-group-item-action py-2">
+          {% if ann.is_pinned %}<span class="badge bg-warning text-dark me-1"><i class="fas fa-thumbtack fa-xs"></i></span>{% endif %}
+          <span class="small fw-semibold">{{ ann.title|truncatechars:38 }}</span>
+          <div class="text-muted" style="font-size:11px;">{{ ann.course.course_code }} · {{ ann.publish_at|date:"M d" }}</div>
+        </a>
+        {% empty %}
+        <div class="list-group-item text-muted text-center py-3">No announcements.</div>
+        {% endfor %}
+      </div>
+    </div>
+
+  </div>
+</div>
+
+{% endif %}
+{% endblock %}

@@ -1,0 +1,175 @@
+{% extends 'base.html' %}
+{% block title %}My Profile{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item active">Profile</li>
+{% endblock %}
+
+{% block page_header %}
+<div class="page-header">
+  <h1 class="page-title"><i class="fas fa-user-circle me-2"></i>My Profile</h1>
+  <div class="page-actions">
+    <a href="{% url 'accounts:profile_edit' %}" class="btn btn-primary">
+      <i class="fas fa-edit me-1"></i>Edit Profile
+    </a>
+    <a href="{% url 'accounts:change_password' %}" class="btn btn-outline-secondary">
+      <i class="fas fa-key me-1"></i>Change Password
+    </a>
+  </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="row g-4">
+
+  <!-- Profile Card -->
+  <div class="col-lg-4">
+    <div class="card shadow-sm">
+      <div class="card-body text-center p-4">
+        {% if profile_user.profile_photo %}
+          <img src="{{ profile_user.profile_photo.url }}" class="rounded-circle mb-3" style="width:100px;height:100px;object-fit:cover;">
+        {% else %}
+          <div class="avatar-lg mx-auto mb-3">{{ profile_user.get_initials }}</div>
+        {% endif %}
+        <h4 class="fw-bold mb-1">{{ profile_user.get_full_name }}</h4>
+        <span class="badge badge-role-{{ profile_user.role }} fs-6 mb-3">{{ profile_user.get_role_display }}</span>
+        <p class="text-muted mb-1"><i class="fas fa-envelope me-1"></i>{{ profile_user.email }}</p>
+        {% if profile_user.phone %}
+          <p class="text-muted mb-1"><i class="fas fa-phone me-1"></i>{{ profile_user.phone }}</p>
+        {% endif %}
+        {% if profile_user.date_of_birth %}
+          <p class="text-muted mb-1"><i class="fas fa-birthday-cake me-1"></i>{{ profile_user.date_of_birth }}</p>
+        {% endif %}
+        <hr>
+        <p class="text-muted small mb-0">Member since {{ profile_user.date_joined|date:"M Y" }}</p>
+      </div>
+    </div>
+
+    <!-- Student Profile Card -->
+    {% if profile and user.is_student %}
+    <div class="card shadow-sm mt-3">
+      <div class="card-header"><h6 class="mb-0"><i class="fas fa-id-card me-2"></i>Student Info</h6></div>
+      <div class="card-body">
+        <table class="table table-sm table-borderless mb-0">
+          <tr><td class="text-muted">Student ID</td><td class="fw-semibold">{{ profile.student_id }}</td></tr>
+          <tr><td class="text-muted">Department</td><td>{{ profile.department|default:"—" }}</td></tr>
+          <tr><td class="text-muted">Year</td><td>{{ profile.get_year_of_study_display }}</td></tr>
+          <tr><td class="text-muted">GPA</td>
+            <td>
+              <span class="fw-bold {% if profile.gpa >= 3.5 %}text-success{% elif profile.gpa >= 2.5 %}text-primary{% else %}text-danger{% endif %}">
+                {{ profile.gpa }}
+              </span>
+            </td>
+          </tr>
+          <tr><td class="text-muted">Status</td>
+            <td><span class="badge bg-success">{{ profile.get_status_display }}</span></td>
+          </tr>
+          <tr><td class="text-muted">Enrolled</td><td>{{ profile.enrollment_date }}</td></tr>
+          {% if profile.scholarship %}
+          <tr><td colspan="2"><span class="badge bg-warning text-dark"><i class="fas fa-star me-1"></i>Scholarship Student</span></td></tr>
+          {% endif %}
+        </table>
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- Professor Profile Card -->
+    {% if profile and user.is_professor %}
+    <div class="card shadow-sm mt-3">
+      <div class="card-header"><h6 class="mb-0"><i class="fas fa-chalkboard-teacher me-2"></i>Academic Info</h6></div>
+      <div class="card-body">
+        <table class="table table-sm table-borderless mb-0">
+          <tr><td class="text-muted">Employee ID</td><td class="fw-semibold">{{ profile.employee_id }}</td></tr>
+          <tr><td class="text-muted">Department</td><td>{{ profile.department|default:"—" }}</td></tr>
+          <tr><td class="text-muted">Rank</td><td>{{ profile.get_rank_display }}</td></tr>
+          <tr><td class="text-muted">Specialization</td><td>{{ profile.specialization|default:"—" }}</td></tr>
+          <tr><td class="text-muted">Office</td><td>{{ profile.office_location|default:"—" }}</td></tr>
+          <tr><td class="text-muted">Hired</td><td>{{ profile.hire_date }}</td></tr>
+        </table>
+        {% if profile.office_hours %}
+          <hr>
+          <p class="text-muted small mb-1 fw-semibold">Office Hours:</p>
+          <p class="small mb-0">{{ profile.office_hours }}</p>
+        {% endif %}
+      </div>
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- Detail Panel -->
+  <div class="col-lg-8">
+    {% if profile_user.bio %}
+    <div class="card shadow-sm mb-4">
+      <div class="card-header"><h6 class="mb-0"><i class="fas fa-align-left me-2"></i>Biography</h6></div>
+      <div class="card-body"><p class="mb-0">{{ profile_user.bio }}</p></div>
+    </div>
+    {% endif %}
+
+    {% if profile_user.address %}
+    <div class="card shadow-sm mb-4">
+      <div class="card-header"><h6 class="mb-0"><i class="fas fa-map-marker-alt me-2"></i>Address</h6></div>
+      <div class="card-body"><p class="mb-0">{{ profile_user.address }}</p></div>
+    </div>
+    {% endif %}
+
+    <!-- Quick links -->
+    <div class="card shadow-sm">
+      <div class="card-header"><h6 class="mb-0"><i class="fas fa-bolt me-2"></i>Quick Links</h6></div>
+      <div class="card-body">
+        <div class="row g-2">
+          {% if user.is_student %}
+            <div class="col-md-4">
+              <a href="{% url 'grades:student_report' %}" class="btn btn-outline-success w-100">
+                <i class="fas fa-chart-line d-block mb-1" style="font-size:1.5rem;"></i>My Grades
+              </a>
+            </div>
+            <div class="col-md-4">
+              <a href="{% url 'attendance:student_report' %}" class="btn btn-outline-info w-100">
+                <i class="fas fa-calendar-check d-block mb-1" style="font-size:1.5rem;"></i>Attendance
+              </a>
+            </div>
+            <div class="col-md-4">
+              <a href="{% url 'assignments:list' %}" class="btn btn-outline-warning w-100">
+                <i class="fas fa-tasks d-block mb-1" style="font-size:1.5rem;"></i>Assignments
+              </a>
+            </div>
+          {% elif user.is_professor %}
+            <div class="col-md-4">
+              <a href="{% url 'courses:list' %}" class="btn btn-outline-primary w-100">
+                <i class="fas fa-book-open d-block mb-1" style="font-size:1.5rem;"></i>My Courses
+              </a>
+            </div>
+            <div class="col-md-4">
+              <a href="{% url 'grades:list' %}" class="btn btn-outline-success w-100">
+                <i class="fas fa-star d-block mb-1" style="font-size:1.5rem;"></i>Grades
+              </a>
+            </div>
+            <div class="col-md-4">
+              <a href="{% url 'assignments:list' %}" class="btn btn-outline-warning w-100">
+                <i class="fas fa-tasks d-block mb-1" style="font-size:1.5rem;"></i>Assignments
+              </a>
+            </div>
+          {% else %}
+            <div class="col-md-4">
+              <a href="{% url 'accounts:user_list' %}" class="btn btn-outline-primary w-100">
+                <i class="fas fa-users d-block mb-1" style="font-size:1.5rem;"></i>Users
+              </a>
+            </div>
+            <div class="col-md-4">
+              <a href="{% url 'courses:list' %}" class="btn btn-outline-success w-100">
+                <i class="fas fa-book-open d-block mb-1" style="font-size:1.5rem;"></i>Courses
+              </a>
+            </div>
+            <div class="col-md-4">
+              <a href="{% url 'core:system_stats' %}" class="btn btn-outline-secondary w-100">
+                <i class="fas fa-chart-bar d-block mb-1" style="font-size:1.5rem;"></i>Stats
+              </a>
+            </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+{% endblock %}

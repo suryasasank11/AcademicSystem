@@ -1,0 +1,177 @@
+{% extends 'base.html' %}
+{% block title %}Professor Dashboard{% endblock %}
+{% block breadcrumb %}<li class="breadcrumb-item active">Dashboard</li>{% endblock %}
+
+{% block page_header %}
+<div class="page-header">
+  <h1 class="page-title">
+    <i class="fas fa-chalkboard-teacher me-2"></i>
+    Welcome, {{ request.user.get_short_name }}
+  </h1>
+  <div class="page-actions">
+    <a href="{% url 'courses:create' %}" class="btn btn-primary"><i class="fas fa-plus me-1"></i>New Course</a>
+    <a href="{% url 'attendance:session_create' %}" class="btn btn-outline-info"><i class="fas fa-user-check me-1"></i>Take Attendance</a>
+  </div>
+</div>
+{% endblock %}
+
+{% block content %}
+
+<!-- Stats -->
+<div class="row g-3 mb-4">
+  <div class="col-6 col-md-3">
+    <div class="stat-card stat-card-primary">
+      <div class="stat-icon"><i class="fas fa-book-open"></i></div>
+      <div class="stat-value">{{ stats.total_courses }}</div>
+      <div class="stat-label">My Courses</div>
+    </div>
+  </div>
+  <div class="col-6 col-md-3">
+    <div class="stat-card stat-card-success">
+      <div class="stat-icon"><i class="fas fa-users"></i></div>
+      <div class="stat-value">{{ stats.total_students }}</div>
+      <div class="stat-label">Total Students</div>
+    </div>
+  </div>
+  <div class="col-6 col-md-3">
+    <div class="stat-card stat-card-warning">
+      <div class="stat-icon"><i class="fas fa-star"></i></div>
+      <div class="stat-value">{{ stats.pending_grades }}</div>
+      <div class="stat-label">Pending Grades</div>
+      <a href="{% url 'grades:list' %}?finalized=0" class="stat-link">Review →</a>
+    </div>
+  </div>
+  <div class="col-6 col-md-3">
+    <div class="stat-card stat-card-danger">
+      <div class="stat-icon"><i class="fas fa-inbox"></i></div>
+      <div class="stat-value">{{ stats.pending_submissions }}</div>
+      <div class="stat-label">To Grade</div>
+      <a href="{% url 'assignments:list' %}" class="stat-link">Review →</a>
+    </div>
+  </div>
+</div>
+
+<div class="row g-4">
+
+  <!-- My Courses -->
+  <div class="col-lg-7">
+    <div class="card shadow-sm">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <h6 class="mb-0"><i class="fas fa-book-open me-2"></i>My Courses</h6>
+        <a href="{% url 'courses:list' %}" class="btn btn-sm btn-outline-primary">All</a>
+      </div>
+      <div class="card-body p-0">
+        {% if my_courses %}
+        <div class="table-responsive">
+          <table class="table table-hover align-middle mb-0">
+            <thead class="table-light"><tr><th>Course</th><th>Enrolled</th><th>Actions</th></tr></thead>
+            <tbody>
+              {% for course in my_courses %}
+              <tr>
+                <td>
+                  <a href="{% url 'courses:detail' course.pk %}" class="fw-semibold text-decoration-none">{{ course.course_code }}</a>
+                  <div class="text-muted small">{{ course.title|truncatechars:40 }}</div>
+                  <div class="text-muted" style="font-size:11px;">
+                    {{ course.schedule_display|default:"No schedule set" }}
+                  </div>
+                </td>
+                <td>
+                  <div class="fw-semibold">{{ course.enrolled_count }}/{{ course.max_students }}</div>
+                  <div class="progress mt-1" style="height:4px;width:80px;">
+                    <div class="progress-bar bg-success" style="width:{{ course.enrollment_percentage }}%"></div>
+                  </div>
+                </td>
+                <td>
+                  <a href="{% url 'grades:bulk_entry' course.pk %}" class="btn btn-xs btn-outline-success me-1" title="Grade">
+                    <i class="fas fa-star"></i>
+                  </a>
+                  <a href="{% url 'attendance:session_create_for_course' course.pk %}" class="btn btn-xs btn-outline-info me-1" title="Attendance">
+                    <i class="fas fa-user-check"></i>
+                  </a>
+                  <a href="{% url 'courses:announcement_create' course.pk %}" class="btn btn-xs btn-outline-warning" title="Announce">
+                    <i class="fas fa-bullhorn"></i>
+                  </a>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {% else %}
+        <div class="text-center py-5 text-muted">
+          <i class="fas fa-book-open fa-3x mb-3"></i>
+          <p>No courses yet. <a href="{% url 'courses:create' %}">Create your first course</a>.</p>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <!-- Right Column -->
+  <div class="col-lg-5">
+
+    <!-- Pending Submissions -->
+    <div class="card shadow-sm mb-4">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <h6 class="mb-0"><i class="fas fa-inbox me-2"></i>Needs Grading</h6>
+        <a href="{% url 'assignments:list' %}" class="btn btn-sm btn-outline-primary">All</a>
+      </div>
+      <div class="list-group list-group-flush">
+        {% for sub in recent_submissions %}
+        <a href="{% url 'assignments:submission_detail' sub.pk %}" class="list-group-item list-group-item-action py-2">
+          <div class="d-flex justify-content-between">
+            <span class="fw-semibold small">{{ sub.student.user.get_full_name }}</span>
+            <span class="badge bg-warning text-dark">{{ sub.get_status_display }}</span>
+          </div>
+          <div class="text-muted" style="font-size:11px;">
+            {{ sub.assignment.title|truncatechars:35 }} · {{ sub.assignment.course.course_code }}
+          </div>
+        </a>
+        {% empty %}
+        <div class="list-group-item text-success text-center py-3">
+          <i class="fas fa-check-circle me-1"></i>All caught up!
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <!-- Upcoming Assignment Deadlines -->
+    <div class="card shadow-sm mb-4">
+      <div class="card-header"><h6 class="mb-0"><i class="fas fa-calendar-alt me-2"></i>Due This Week</h6></div>
+      <div class="list-group list-group-flush">
+        {% for a in upcoming_assignments %}
+        <a href="{% url 'assignments:detail' a.pk %}" class="list-group-item list-group-item-action py-2">
+          <div class="d-flex justify-content-between">
+            <span class="small fw-semibold">{{ a.title|truncatechars:28 }}</span>
+            <span class="text-muted small">{{ a.due_date|date:"M d" }}</span>
+          </div>
+          <div class="text-muted" style="font-size:11px;">{{ a.course.course_code }} · {{ a.submission_count }} submitted</div>
+        </a>
+        {% empty %}
+        <div class="list-group-item text-muted text-center py-3">No deadlines this week.</div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <!-- Recent Announcements -->
+    <div class="card shadow-sm">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <h6 class="mb-0"><i class="fas fa-bullhorn me-2"></i>Announcements</h6>
+        <a href="{% url 'courses:announcement_list' %}" class="btn btn-sm btn-outline-primary">All</a>
+      </div>
+      <div class="list-group list-group-flush">
+        {% for ann in recent_announcements %}
+        <a href="{% url 'courses:announcement_detail' ann.pk %}" class="list-group-item list-group-item-action py-2">
+          {% if ann.is_pinned %}<span class="badge bg-warning text-dark me-1"><i class="fas fa-thumbtack"></i></span>{% endif %}
+          <span class="small fw-semibold">{{ ann.title|truncatechars:40 }}</span>
+          <div class="text-muted" style="font-size:11px;">{{ ann.course.course_code }} · {{ ann.publish_at|date:"M d" }}</div>
+        </a>
+        {% empty %}
+        <div class="list-group-item text-muted text-center py-3">No announcements.</div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
