@@ -1,0 +1,107 @@
+{% extends 'base.html' %}
+{% block title %}{{ action }} Course{% endblock %}
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'courses:list' %}">Courses</a></li>
+<li class="breadcrumb-item active">{{ action }}</li>
+{% endblock %}
+{% block page_header %}
+<div class="page-header">
+  <h1 class="page-title"><i class="fas fa-book-open me-2"></i>{{ action }} Course</h1>
+</div>
+{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+<div class="col-lg-9">
+<div class="card shadow-sm">
+<div class="card-body p-4">
+<form method="post" enctype="multipart/form-data" novalidate>
+{% csrf_token %}
+<div class="row g-3">
+  <div class="col-md-4">
+    <label class="form-label fw-semibold">Course Code *</label>
+    {{ form.course_code }}
+    {% if form.course_code.errors %}<div class="invalid-feedback d-block">{{ form.course_code.errors.0 }}</div>{% endif %}
+  </div>
+  <div class="col-md-8">
+    <label class="form-label fw-semibold">Title *</label>
+    {{ form.title }}
+    {% if form.title.errors %}<div class="invalid-feedback d-block">{{ form.title.errors.0 }}</div>{% endif %}
+  </div>
+  <div class="col-12">
+    <label class="form-label fw-semibold">Description</label>
+    {{ form.description }}
+  </div>
+  <div class="col-md-6">
+    <label class="form-label fw-semibold">Professor *</label>
+    {{ form.professor }}
+  </div>
+  <div class="col-md-6">
+    <label class="form-label fw-semibold">Department</label>
+    {{ form.department }}
+  </div>
+  <div class="col-md-4">
+    <label class="form-label fw-semibold">Academic Year</label>
+    {{ form.academic_year }}
+  </div>
+  <div class="col-md-4">
+    <label class="form-label fw-semibold">Semester</label>
+    {{ form.semester }}
+  </div>
+  <div class="col-md-2">
+    <label class="form-label fw-semibold">Credits</label>
+    {{ form.credits }}
+  </div>
+  <div class="col-md-2">
+    <label class="form-label fw-semibold">Max Students</label>
+    {{ form.max_students }}
+  </div>
+  <div class="col-md-4">
+    <label class="form-label fw-semibold">Schedule Days</label>
+    {{ form.schedule_days }}
+  </div>
+  <div class="col-md-4">
+    <label class="form-label fw-semibold">Start Time</label>
+    {{ form.start_time }}
+  </div>
+  <div class="col-md-4">
+    <label class="form-label fw-semibold">End Time</label>
+    {{ form.end_time }}
+  </div>
+  <div class="col-md-6">
+    <label class="form-label fw-semibold">Room / Location</label>
+    {{ form.room }}
+  </div>
+  <div class="col-md-6">
+    <label class="form-label fw-semibold">Delivery Mode</label>
+    {{ form.delivery_mode }}
+  </div>
+  <div class="col-12">
+    <label class="form-label fw-semibold">Online Meeting Link</label>
+    {{ form.meeting_link }}
+  </div>
+  <div class="col-md-6">
+    <label class="form-label fw-semibold">Start Date</label>
+    {{ form.start_date }}
+  </div>
+  <div class="col-md-6">
+    <label class="form-label fw-semibold">End Date</label>
+    {{ form.end_date }}
+  </div>
+  <div class="col-md-4">
+    <label class="form-label fw-semibold">Status</label>
+    {{ form.status }}
+  </div>
+  <div class="col-md-8">
+    <label class="form-label fw-semibold">Syllabus (PDF)</label>
+    {{ form.syllabus }}
+  </div>
+</div>
+{% if form.non_field_errors %}<div class="alert alert-danger mt-3">{{ form.non_field_errors.0 }}</div>{% endif %}
+<div class="d-flex gap-2 mt-4">
+  <button type="submit" class="btn btn-primary"><i class="fas fa-save me-1"></i>Save Course</button>
+  <a href="{% url 'courses:list' %}" class="btn btn-outline-secondary">Cancel</a>
+</div>
+</form>
+</div></div>
+</div></div>
+{% endblock %}

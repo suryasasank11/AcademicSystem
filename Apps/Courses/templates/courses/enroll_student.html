@@ -1,0 +1,46 @@
+{% extends 'base.html' %}
+{% block title %}Enroll Student{% endblock %}
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'courses:detail' course.pk %}">{{ course.course_code }}</a></li>
+<li class="breadcrumb-item active">Enroll Student</li>
+{% endblock %}
+{% block page_header %}
+<div class="page-header">
+  <h1 class="page-title"><i class="fas fa-user-plus me-2"></i>Enroll Student — {{ course.course_code }}</h1>
+</div>
+{% endblock %}
+{% block content %}
+<div class="row justify-content-center"><div class="col-lg-6">
+<div class="card shadow-sm">
+  <div class="card-header">
+    <div class="d-flex justify-content-between">
+      <span>Capacity: <strong>{{ course.enrolled_count }}/{{ course.max_students }}</strong></span>
+      {% if course.is_full %}<span class="badge bg-danger">FULL</span>{% else %}<span class="badge bg-success">Available</span>{% endif %}
+    </div>
+  </div>
+  <div class="card-body p-4">
+    <form method="post" novalidate>
+      {% csrf_token %}
+      <div class="mb-3">
+        <label class="form-label fw-semibold">Student *</label>
+        {{ form.student }}
+        {% if form.student.errors %}<div class="invalid-feedback d-block">{{ form.student.errors.0 }}</div>{% endif %}
+      </div>
+      <div class="mb-3">
+        <label class="form-label fw-semibold">Status</label>
+        {{ form.status }}
+      </div>
+      <div class="mb-4">
+        <label class="form-label fw-semibold">Notes</label>
+        {{ form.notes }}
+      </div>
+      {% if form.non_field_errors %}<div class="alert alert-danger">{{ form.non_field_errors.0 }}</div>{% endif %}
+      <div class="d-flex gap-2">
+        <button type="submit" class="btn btn-success"><i class="fas fa-user-plus me-1"></i>Enroll</button>
+        <a href="{% url 'courses:detail' course.pk %}" class="btn btn-outline-secondary">Cancel</a>
+      </div>
+    </form>
+  </div>
+</div>
+</div></div>
+{% endblock %}

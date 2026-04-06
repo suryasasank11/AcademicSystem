@@ -1,0 +1,216 @@
+{% extends 'base.html' %}
+{% block title %}{{ course.course_code }}{% endblock %}
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'courses:list' %}">Courses</a></li>
+<li class="breadcrumb-item active">{{ course.course_code }}</li>
+{% endblock %}
+{% block page_header %}
+<div class="page-header">
+  <h1 class="page-title"><i class="fas fa-book-open me-2"></i>{{ course.course_code }} — {{ course.title }}</h1>
+  <div class="page-actions">
+    {% if not request.user.is_student %}
+      <a href="{% url 'courses:edit' course.pk %}" class="btn btn-outline-primary"><i class="fas fa-edit me-1"></i>Edit</a>
+      <a href="{% url 'assignments:create_for_course' course.pk %}" class="btn btn-outline-warning"><i class="fas fa-plus me-1"></i>Assignment</a>
+      <a href="{% url 'courses:announcement_create' course.pk %}" class="btn btn-outline-info"><i class="fas fa-bullhorn me-1"></i>Announce</a>
+      <a href="{% url 'attendance:session_create_for_course' course.pk %}" class="btn btn-outline-success"><i class="fas fa-user-check me-1"></i>Attendance</a>
+    {% endif %}
+    {% if request.user.is_student and can_enroll %}
+      <form method="post" action="{% url 'courses:self_enroll' %}" class="d-inline">
+        {% csrf_token %}
+        <input type="hidden" name="course" value="{{ course.pk }}">
+        <button type="submit" class="btn btn-success"><i class="fas fa-plus-circle me-1"></i>Enroll</button>
+      </form>
+    {% elif my_enrollment %}
+      <span class="badge bg-success fs-6"><i class="fas fa-check me-1"></i>Enrolled</span>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="row g-4">
+
+  <!-- Left: Info -->
+  <div class="col-lg-4">
+    <div class="card shadow-sm mb-3">
+      <div class="card-body">
+        <h6 class="fw-bold mb-3">Course Information</h6>
+        <table class="table table-sm table-borderless mb-0">
+          <tr><td class="text-muted">Code</td><td><strong>{{ course.course_code }}</strong></td></tr>
+          <tr><td class="text-muted">Credits</td><td>{{ course.credits }}</td></tr>
+          <tr><td class="text-muted">Professor</td><td>{{ course.professor.get_full_name }}</td></tr>
+          <tr><td class="text-muted">Department</td><td>{{ course.department|default:"—" }}</td></tr>
+          <tr><td class="text-muted">Semester</td><td>{{ course.semester }} {{ course.academic_year }}</td></tr>
+          <tr><td class="text-muted">Delivery</td><td>{{ course.get_delivery_mode_display }}</td></tr>
+          {% if course.room %}<tr><td class="text-muted">Room</td><td>{{ course.room }}</td></tr>{% endif %}
+          {% if course.schedule_display %}<tr><td class="text-muted">Schedule</td><td>{{ course.schedule_display }}</td></tr>{% endif %}
+          {% if course.start_date %}<tr><td class="text-muted">Dates</td><td>{{ course.start_date }} – {{ course.end_date }}</td></tr>{% endif %}
+          {% if course.meeting_link %}<tr><td class="text-muted">Link</td><td><a href="{{ course.meeting_link }}" target="_blank">Join</a></td></tr>{% endif %}
+        </table>
+        <hr>
+        <div class="d-flex justify-content-between align-items-center mb-1">
+          <span class="text-muted small">Enrollment</span>
+          <span class="fw-semibold">{{ course.enrolled_count }}/{{ course.max_students }}</span>
+        </div>
+        <div class="progress" style="height:8px;">
+          <div class="progress-bar bg-{% if course.enrollment_percentage >= 90 %}danger{% elif course.enrollment_percentage >= 70 %}warning{% else %}success{% endif %}"
+               style="width:{{ course.enrollment_percentage }}%"></div>
+        </div>
+        {% if course.is_full %}<div class="text-danger small mt-1"><i class="fas fa-lock me-1"></i>Course is full</div>{% endif %}
+      </div>
+    </div>
+
+    <!-- Grade Components -->
+    {% if grade_components %}
+    <div class="card shadow-sm mb-3">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <h6 class="mb-0"><i class="fas fa-percent me-2"></i>Grading Breakdown</h6>
+        {% if not request.user.is_student %}
+        <a href="{% url 'grades:components' course.pk %}" class="btn btn-xs btn-outline-secondary">Edit</a>
+        {% endif %}
+      </div>
+      <div class="card-body p-0">
+        {% for comp in grade_components %}
+        <div class="d-flex justify-content-between align-items-center px-3 py-2 border-bottom">
+          <span class="small">{{ comp.name }}</span>
+          <span class="badge bg-secondary">{{ comp.weight }}%</span>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- Admin/Prof: Enroll Student -->
+    {% if not request.user.is_student %}
+    <div class="card shadow-sm">
+      <div class="card-header"><h6 class="mb-0"><i class="fas fa-user-plus me-2"></i>Quick Enroll</h6></div>
+      <div class="card-body">
+        <a href="{% url 'courses:enroll_student' course.pk %}" class="btn btn-outline-success w-100">
+          <i class="fas fa-user-plus me-1"></i>Enroll a Student
+        </a>
+        {% if not request.user.is_student %}
+        <a href="{% url 'grades:bulk_entry' course.pk %}" class="btn btn-outline-primary w-100 mt-2">
+          <i class="fas fa-star me-1"></i>Enter Grades
+        </a>
+        <a href="{% url 'attendance:course_summary' course.pk %}" class="btn btn-outline-info w-100 mt-2">
+          <i class="fas fa-chart-bar me-1"></i>Attendance Summary
+        </a>
+        {% endif %}
+      </div>
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- Right: Tabs -->
+  <div class="col-lg-8">
+    {% if course.description %}
+    <div class="card shadow-sm mb-4">
+      <div class="card-header"><h6 class="mb-0">About This Course</h6></div>
+      <div class="card-body"><p class="mb-0">{{ course.description }}</p></div>
+    </div>
+    {% endif %}
+
+    <!-- Tabs -->
+    <ul class="nav nav-tabs mb-3" id="courseTabs">
+      <li class="nav-item"><a class="nav-link active" data-bs-toggle="tab" href="#announcements">Announcements <span class="badge bg-secondary">{{ announcements|length }}</span></a></li>
+      <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#assignments">Assignments <span class="badge bg-secondary">{{ assignments|length }}</span></a></li>
+      {% if not request.user.is_student %}
+      <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#students">Students <span class="badge bg-secondary">{{ enrollments|length }}</span></a></li>
+      {% endif %}
+    </ul>
+
+    <div class="tab-content">
+
+      <!-- Announcements Tab -->
+      <div class="tab-pane fade show active" id="announcements">
+        {% if not request.user.is_student %}
+        <div class="mb-3">
+          <a href="{% url 'courses:announcement_create' course.pk %}" class="btn btn-sm btn-outline-info">
+            <i class="fas fa-plus me-1"></i>New Announcement
+          </a>
+        </div>
+        {% endif %}
+        {% for ann in announcements %}
+        <div class="card shadow-sm mb-2 {% if ann.is_pinned %}border-warning{% endif %}">
+          <div class="card-body py-2 px-3">
+            <div class="d-flex justify-content-between align-items-start">
+              <div>
+                {% if ann.is_pinned %}<i class="fas fa-thumbtack text-warning me-1"></i>{% endif %}
+                <a href="{% url 'courses:announcement_detail' ann.pk %}" class="fw-semibold text-decoration-none">{{ ann.title }}</a>
+                <span class="badge bg-{{ ann.priority_badge_class }} ms-1">{{ ann.get_priority_display }}</span>
+              </div>
+              <span class="text-muted small">{{ ann.publish_at|date:"M d, Y" }}</span>
+            </div>
+            <p class="text-muted small mb-0 mt-1">{{ ann.content|truncatechars:120 }}</p>
+          </div>
+        </div>
+        {% empty %}
+        <p class="text-muted text-center py-3">No announcements yet.</p>
+        {% endfor %}
+      </div>
+
+      <!-- Assignments Tab -->
+      <div class="tab-pane fade" id="assignments">
+        {% if not request.user.is_student %}
+        <div class="mb-3">
+          <a href="{% url 'assignments:create_for_course' course.pk %}" class="btn btn-sm btn-outline-warning">
+            <i class="fas fa-plus me-1"></i>New Assignment
+          </a>
+        </div>
+        {% endif %}
+        {% for a in assignments %}
+        <div class="card shadow-sm mb-2">
+          <div class="card-body py-2 px-3">
+            <div class="d-flex justify-content-between align-items-start">
+              <div>
+                <a href="{% url 'assignments:detail' a.pk %}" class="fw-semibold text-decoration-none">{{ a.title }}</a>
+                <span class="badge bg-secondary ms-1">{{ a.get_assignment_type_display }}</span>
+              </div>
+              <span class="badge bg-{{ a.due_date_badge_class }}">Due {{ a.due_date|date:"M d" }}</span>
+            </div>
+            <p class="text-muted small mb-0 mt-1">{{ a.max_score }} pts · {{ a.submission_count }} submitted</p>
+          </div>
+        </div>
+        {% empty %}
+        <p class="text-muted text-center py-3">No assignments yet.</p>
+        {% endfor %}
+      </div>
+
+      <!-- Students Tab -->
+      {% if not request.user.is_student %}
+      <div class="tab-pane fade" id="students">
+        <div class="table-responsive">
+          <table class="table table-hover align-middle mb-0">
+            <thead class="table-light"><tr><th>Student</th><th>ID</th><th>Status</th><th>Actions</th></tr></thead>
+            <tbody>
+              {% for e in enrollments %}
+              <tr>
+                <td>
+                  <a href="{% url 'accounts:user_detail' e.student.user.pk %}" class="text-decoration-none fw-semibold">
+                    {{ e.student.user.get_full_name }}
+                  </a>
+                </td>
+                <td class="text-muted small">{{ e.student.student_id }}</td>
+                <td><span class="badge bg-success">{{ e.get_status_display }}</span></td>
+                <td>
+                  <a href="{% url 'grades:entry' e.pk %}" class="btn btn-xs btn-outline-primary me-1" title="Grade">
+                    <i class="fas fa-star"></i>
+                  </a>
+                  <a href="{% url 'courses:drop_enrollment' e.pk %}" class="btn btn-xs btn-outline-danger" title="Drop">
+                    <i class="fas fa-times"></i>
+                  </a>
+                </td>
+              </tr>
+              {% empty %}
+              <tr><td colspan="4" class="text-center text-muted py-3">No enrolled students.</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+      {% endif %}
+
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,56 @@
+{% extends 'base.html' %}
+{% block title %}{{ action }} Announcement{% endblock %}
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'courses:announcement_list' %}">Announcements</a></li>
+<li class="breadcrumb-item active">{{ action }}</li>
+{% endblock %}
+{% block page_header %}
+<div class="page-header"><h1 class="page-title"><i class="fas fa-bullhorn me-2"></i>{{ action }} Announcement{% if course %} — {{ course.course_code }}{% endif %}</h1></div>
+{% endblock %}
+{% block content %}
+<div class="row justify-content-center"><div class="col-lg-7">
+<div class="card shadow-sm"><div class="card-body p-4">
+<form method="post" novalidate>
+{% csrf_token %}
+<div class="mb-3">
+  <label class="form-label fw-semibold">Title *</label>
+  {{ form.title }}
+  {% if form.title.errors %}<div class="invalid-feedback d-block">{{ form.title.errors.0 }}</div>{% endif %}
+</div>
+<div class="row g-3 mb-3">
+  <div class="col-md-6">
+    <label class="form-label fw-semibold">Type</label>
+    {{ form.announcement_type }}
+  </div>
+  <div class="col-md-6">
+    <label class="form-label fw-semibold">Priority</label>
+    {{ form.priority }}
+  </div>
+</div>
+<div class="mb-3">
+  <label class="form-label fw-semibold">Content *</label>
+  {{ form.content }}
+</div>
+<div class="row g-3 mb-3">
+  <div class="col-md-6">
+    <label class="form-label fw-semibold">Publish At</label>
+    {{ form.publish_at }}
+  </div>
+  <div class="col-md-6">
+    <label class="form-label fw-semibold">Expires At</label>
+    {{ form.expires_at }}
+  </div>
+</div>
+<div class="d-flex gap-3 mb-4">
+  <div class="form-check">{{ form.is_pinned }}<label class="form-check-label" for="{{ form.is_pinned.id_for_label }}">Pin announcement</label></div>
+  <div class="form-check">{{ form.send_email }}<label class="form-check-label" for="{{ form.send_email.id_for_label }}">Email students</label></div>
+</div>
+{% if form.non_field_errors %}<div class="alert alert-danger">{{ form.non_field_errors.0 }}</div>{% endif %}
+<div class="d-flex gap-2">
+  <button type="submit" class="btn btn-primary"><i class="fas fa-save me-1"></i>Save</button>
+  <a href="{% url 'courses:announcement_list' %}" class="btn btn-outline-secondary">Cancel</a>
+</div>
+</form>
+</div></div>
+</div></div>
+{% endblock %}

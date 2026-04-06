@@ -1,0 +1,19 @@
+{% extends 'base.html' %}
+{% block title %}Drop Enrollment{% endblock %}
+{% block page_header %}<div class="page-header"><h1 class="page-title text-danger"><i class="fas fa-user-minus me-2"></i>Drop Enrollment</h1></div>{% endblock %}
+{% block content %}
+<div class="row justify-content-center"><div class="col-md-5">
+<div class="card shadow-sm border-warning">
+  <div class="card-body p-4 text-center">
+    <i class="fas fa-exclamation-triangle fa-3x text-warning mb-3"></i>
+    <h5>Drop <strong>{{ enrollment.student.user.get_full_name }}</strong> from <strong>{{ enrollment.course.course_code }}</strong>?</h5>
+    <p class="text-muted">The student's enrollment status will be changed to "Dropped". Their grades and attendance records will remain.</p>
+    <form method="post" class="d-flex gap-2 justify-content-center mt-3">
+      {% csrf_token %}
+      <button type="submit" class="btn btn-warning"><i class="fas fa-user-minus me-1"></i>Yes, Drop</button>
+      <a href="{% url 'courses:detail' enrollment.course.pk %}" class="btn btn-outline-secondary">Cancel</a>
+    </form>
+  </div>
+</div>
+</div></div>
+{% endblock %}

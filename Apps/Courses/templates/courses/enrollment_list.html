@@ -1,0 +1,90 @@
+{% extends 'base.html' %}
+{% block title %}Enrollments{% endblock %}
+{% block breadcrumb %}<li class="breadcrumb-item active">Enrollments</li>{% endblock %}
+{% block page_header %}
+<div class="page-header">
+  <h1 class="page-title"><i class="fas fa-users me-2"></i>Enrollments</h1>
+</div>
+{% endblock %}
+{% block content %}
+<div class="card shadow-sm mb-3">
+  <div class="card-body py-3">
+    <form method="get" class="row g-2 align-items-end">
+      <div class="col-md-4"><input type="search" name="q" class="form-control" placeholder="Search student name or ID..." value="{{ search_query }}"></div>
+      <div class="col-md-3">
+        <select name="course" class="form-select">
+          <option value="">All Courses</option>
+          {% for c in course_list %}<option value="{{ c.pk }}" {% if filter_course == c.pk|stringformat:"s" %}selected{% endif %}>{{ c.course_code }}</option>{% endfor %}
+        </select>
+      </div>
+      <div class="col-md-2">
+        <select name="status" class="form-select">
+          <option value="">All Status</option>
+          {% for val, label in status_choices %}<option value="{{ val }}" {% if filter_status == val %}selected{% endif %}>{{ label }}</option>{% endfor %}
+        </select>
+      </div>
+      <div class="col-md-2 d-flex gap-2">
+        <button type="submit" class="btn btn-primary"><i class="fas fa-search"></i></button>
+        <a href="{% url 'courses:enrollment_list' %}" class="btn btn-outline-secondary"><i class="fas fa-times"></i></a>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="card shadow-sm">
+  <div class="card-body p-0">
+    <div class="table-responsive">
+      <table class="table table-hover align-middle mb-0">
+        <thead class="table-light">
+          <tr><th>Student</th><th>Course</th><th>Status</th><th>Enrolled</th><th>Grade</th><th>Attendance</th><th class="text-end">Actions</th></tr>
+        </thead>
+        <tbody>
+          {% for e in enrollments %}
+          <tr>
+            <td>
+              <a href="{% url 'accounts:user_detail' e.student.user.pk %}" class="fw-semibold text-decoration-none">{{ e.student.user.get_full_name }}</a>
+              <div class="text-muted small">{{ e.student.student_id }}</div>
+            </td>
+            <td>
+              <a href="{% url 'courses:detail' e.course.pk %}" class="text-decoration-none">{{ e.course.course_code }}</a>
+              <div class="text-muted small">{{ e.course.title|truncatechars:25 }}</div>
+            </td>
+            <td>
+              <span class="badge bg-{% if e.status == 'enrolled' %}success{% elif e.status == 'dropped' %}danger{% elif e.status == 'completed' %}primary{% else %}secondary{% endif %}">
+                {{ e.get_status_display }}
+              </span>
+            </td>
+            <td class="text-muted small">{{ e.enrollment_date|date:"M d, Y" }}</td>
+            <td>
+              {% if e.final_grade %}
+                <span class="badge bg-{% if e.final_grade.letter_grade.0 == 'A' %}success{% elif e.final_grade.letter_grade.0 == 'B' %}primary{% else %}warning{% endif %}">
+                  {{ e.final_grade.letter_grade|default:"—" }}
+                </span>
+              {% else %}<span class="text-muted">—</span>{% endif %}
+            </td>
+            <td>
+              <span class="small {% if e.attendance_percentage >= 75 %}text-success{% else %}text-danger{% endif %}">
+                {{ e.attendance_percentage }}%
+              </span>
+            </td>
+            <td class="text-end">
+              <a href="{% url 'grades:entry' e.pk %}" class="btn btn-xs btn-outline-success me-1" title="Grade"><i class="fas fa-star"></i></a>
+              <a href="{% url 'courses:drop_enrollment' e.pk %}" class="btn btn-xs btn-outline-danger" title="Drop"><i class="fas fa-times"></i></a>
+            </td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="7" class="text-center text-muted py-5">No enrollments found.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% if is_paginated %}
+<nav class="mt-4"><ul class="pagination justify-content-center">
+  {% if page_obj.has_previous %}<li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}">Previous</a></li>{% endif %}
+  <li class="page-item disabled"><span class="page-link">{{ page_obj.number }}/{{ page_obj.paginator.num_pages }}</span></li>
+  {% if page_obj.has_next %}<li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}">Next</a></li>{% endif %}
+</ul></nav>
+{% endif %}
+{% endblock %}

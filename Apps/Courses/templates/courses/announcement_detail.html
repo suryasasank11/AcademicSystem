@@ -1,0 +1,44 @@
+{% extends 'base.html' %}
+{% block title %}{{ announcement.title }}{% endblock %}
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'courses:announcement_list' %}">Announcements</a></li>
+<li class="breadcrumb-item active">{{ announcement.title|truncatechars:30 }}</li>
+{% endblock %}
+{% block page_header %}
+<div class="page-header">
+  <h1 class="page-title"><i class="fas fa-bullhorn me-2"></i>Announcement</h1>
+  {% if not request.user.is_student %}
+  <div class="page-actions">
+    <a href="{% url 'courses:announcement_edit' announcement.pk %}" class="btn btn-outline-primary"><i class="fas fa-edit me-1"></i>Edit</a>
+    <a href="{% url 'courses:announcement_delete' announcement.pk %}" class="btn btn-outline-danger"><i class="fas fa-trash me-1"></i>Delete</a>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}
+{% block content %}
+<div class="row justify-content-center"><div class="col-lg-8">
+<div class="card shadow-sm">
+  <div class="card-header d-flex justify-content-between align-items-start flex-wrap gap-2">
+    <div>
+      {% if announcement.is_pinned %}<span class="badge bg-warning text-dark me-1"><i class="fas fa-thumbtack"></i> Pinned</span>{% endif %}
+      <span class="badge bg-{{ announcement.priority_badge_class }}">{{ announcement.get_priority_display }}</span>
+      <span class="badge bg-secondary ms-1">{{ announcement.get_announcement_type_display }}</span>
+    </div>
+    <span class="text-muted small">{{ announcement.publish_at|date:"M d, Y H:i" }}</span>
+  </div>
+  <div class="card-body p-4">
+    <h4 class="fw-bold mb-3">{{ announcement.title }}</h4>
+    <div class="mb-3 text-muted small">
+      <i class="fas fa-book me-1"></i>{{ announcement.course.course_code }} — {{ announcement.course.title }}
+      &nbsp;·&nbsp;
+      <i class="fas fa-user me-1"></i>{{ announcement.author.get_full_name }}
+    </div>
+    <hr>
+    <div class="announcement-content" style="line-height:1.8;">{{ announcement.content|linebreaks }}</div>
+    {% if announcement.expires_at %}
+    <div class="alert alert-warning mt-3 mb-0"><i class="fas fa-clock me-1"></i>Expires: {{ announcement.expires_at|date:"M d, Y H:i" }}</div>
+    {% endif %}
+  </div>
+</div>
+</div></div>
+{% endblock %}
