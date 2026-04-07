@@ -21,9 +21,9 @@
 
 {% if user.is_authenticated %}
 
-  <!-- ================================================================
+  <!-- ============================================================
        SIDEBAR
-  ================================================================ -->
+  ============================================================ -->
   <nav id="sidebar" class="sidebar">
     <div class="sidebar-header">
       <a href="{% url 'core:dashboard' %}" class="sidebar-brand">
@@ -133,7 +133,7 @@
           </a>
         </li>
 
-      {% else %}{# admin #}
+      {% else %}
         <li class="nav-label">Administration</li>
 
         <li class="nav-item">
@@ -212,16 +212,15 @@
   <!-- Sidebar Overlay (mobile) -->
   <div class="sidebar-overlay" id="sidebarOverlay"></div>
 
-  <!-- ================================================================
+  <!-- ============================================================
        TOPBAR
-  ================================================================ -->
+  ============================================================ -->
   <div class="main-wrapper">
     <header class="topbar">
       <div class="topbar-left">
         <button class="btn btn-icon sidebar-toggle-btn" id="sidebarToggle">
           <i class="fas fa-bars"></i>
         </button>
-        <!-- Breadcrumb -->
         <nav aria-label="breadcrumb" class="d-none d-md-flex">
           <ol class="breadcrumb mb-0">
             <li class="breadcrumb-item">
@@ -235,7 +234,6 @@
       </div>
 
       <div class="topbar-right">
-        <!-- Search -->
         <form class="topbar-search d-none d-md-flex" action="{% url 'core:search' %}" method="get">
           <div class="input-group input-group-sm">
             <input type="search" name="q" class="form-control" placeholder="Search..."
@@ -246,7 +244,6 @@
           </div>
         </form>
 
-        <!-- User Menu -->
         <div class="dropdown">
           <button class="btn btn-icon dropdown-toggle topbar-user-btn" data-bs-toggle="dropdown">
             {% if user.profile_photo %}
@@ -280,12 +277,11 @@
       </div>
     </header>
 
-    <!-- ================================================================
-         MAIN CONTENT
-    ================================================================ -->
+    <!-- ============================================================
+         MAIN CONTENT (authenticated)
+    ============================================================ -->
     <main class="main-content">
 
-      <!-- Flash Messages -->
       {% if messages %}
         <div class="messages-container">
           {% for message in messages %}
@@ -302,15 +298,34 @@
         </div>
       {% endif %}
 
-      <!-- Page Header -->
       {% block page_header %}{% endblock %}
 
-      <!-- Page Content -->
-      {% block content %}{% endblock %}
+{% endif %}{# end authenticated layout wrapper #}
 
+{% if not user.is_authenticated %}
+  <!-- ============================================================
+       UNAUTHENTICATED: messages only (no sidebar/topbar)
+  ============================================================ -->
+  {% if messages %}
+    <div class="position-fixed top-0 start-50 translate-middle-x mt-3" style="z-index:9999;min-width:400px;">
+      {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show shadow" role="alert">
+          {{ message }}
+          <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+      {% endfor %}
+    </div>
+  {% endif %}
+{% endif %}
+
+<!-- ============================================================
+     PAGE CONTENT BLOCK — appears exactly ONCE for all users
+============================================================ -->
+{% block content %}{% endblock %}
+
+{% if user.is_authenticated %}
     </main>
 
-    <!-- Footer -->
     <footer class="main-footer">
       <div class="d-flex justify-content-between align-items-center">
         <span class="text-muted small">
@@ -324,19 +339,6 @@
     </footer>
   </div><!-- /main-wrapper -->
 
-{% else %}
-  <!-- Unauthenticated layout (login/register pages) -->
-  {% if messages %}
-    <div class="position-fixed top-0 start-50 translate-middle-x mt-3" style="z-index:9999;min-width:400px;">
-      {% for message in messages %}
-        <div class="alert alert-{{ message.tags }} alert-dismissible fade show shadow" role="alert">
-          {{ message }}
-          <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        </div>
-      {% endfor %}
-    </div>
-  {% endif %}
-  {% block content %}{% endblock %}
 {% endif %}
 
 <!-- Bootstrap 5 JS -->
