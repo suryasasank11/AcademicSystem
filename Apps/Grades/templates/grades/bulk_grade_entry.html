@@ -1,0 +1,73 @@
+{% extends 'base.html' %}
+{% block title %}Bulk Grade Entry{% endblock %}
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'grades:list' %}">Grades</a></li>
+<li class="breadcrumb-item active">Bulk Entry</li>
+{% endblock %}
+{% block page_header %}
+<div class="page-header">
+  <h1 class="page-title"><i class="fas fa-star me-2"></i>Bulk Grade Entry — {{ course.course_code }}</h1>
+  <div class="page-actions">
+    <a href="{% url 'grades:course_grades' course.pk %}" class="btn btn-outline-secondary"><i class="fas fa-chart-bar me-1"></i>Grade Overview</a>
+  </div>
+</div>
+{% endblock %}
+{% block content %}
+<div class="card shadow-sm">
+  <div class="card-header">
+    <div class="d-flex justify-content-between align-items-center">
+      <h6 class="mb-0">{{ course.title }} — {{ course.semester }} {{ course.academic_year }}</h6>
+      <span class="text-muted small">{{ enrollment_grade_pairs|length }} student(s)</span>
+    </div>
+  </div>
+  <div class="card-body p-0">
+    <form method="post" novalidate>
+      {% csrf_token %}
+      <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+          <thead class="table-light">
+            <tr>
+              <th>Student</th>
+              <th>Current Grade</th>
+              <th style="min-width:130px;">Score (%)</th>
+              <th style="min-width:110px;">Letter</th>
+              <th style="min-width:160px;">Remarks</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for enrollment, existing_grade in enrollment_grade_pairs %}
+            {% with prefix="enrollment_"|add:enrollment.pk|stringformat:"s" %}
+            <tr>
+              <td>
+                <div class="fw-semibold">{{ enrollment.student.user.get_full_name }}</div>
+                <div class="text-muted small">{{ enrollment.student.student_id }}</div>
+              </td>
+              <td>
+                {% if existing_grade and existing_grade.letter_grade %}
+                  <span class="badge bg-{% if existing_grade.letter_grade.0 == 'A' %}success{% elif existing_grade.letter_grade.0 == 'B' %}primary{% elif existing_grade.letter_grade.0 == 'C' %}warning{% else %}danger{% endif %}">
+                    {{ existing_grade.letter_grade }}
+                  </span>
+                  {% if existing_grade.is_finalized %}<i class="fas fa-lock text-muted ms-1" title="Finalized"></i>{% endif %}
+                {% else %}
+                  <span class="text-muted small">—</span>
+                {% endif %}
+              </td>
+              <td>{{ form|getitem:prefix|add:"_score" }}</td>
+              <td>{{ form|getitem:prefix|add:"_letter" }}</td>
+              <td>{{ form|getitem:prefix|add:"_remarks" }}</td>
+            </tr>
+            {% endwith %}
+            {% empty %}
+            <tr><td colspan="5" class="text-center text-muted py-4">No enrolled students.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      <div class="p-3 border-top d-flex gap-2 justify-content-end">
+        <button type="submit" class="btn btn-primary"><i class="fas fa-save me-1"></i>Save All Grades</button>
+        <a href="{% url 'courses:detail' course.pk %}" class="btn btn-outline-secondary">Cancel</a>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

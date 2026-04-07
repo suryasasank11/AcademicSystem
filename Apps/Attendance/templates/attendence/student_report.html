@@ -1,0 +1,87 @@
+{% extends 'base.html' %}
+{% block title %}My Attendance{% endblock %}
+{% block breadcrumb %}<li class="breadcrumb-item active">My Attendance</li>{% endblock %}
+{% block page_header %}
+<div class="page-header">
+  <h1 class="page-title"><i class="fas fa-calendar-check me-2"></i>My Attendance Report</h1>
+</div>
+{% endblock %}
+{% block content %}
+{% for item in attendance_data %}
+<div class="card shadow-sm mb-4">
+  <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+    <div>
+      <h6 class="mb-0 fw-bold">
+        <a href="{% url 'courses:detail' item.enrollment.course.pk %}" class="text-decoration-none">
+          {{ item.enrollment.course.course_code }}
+        </a>
+        <span class="text-muted fw-normal ms-1">— {{ item.enrollment.course.title }}</span>
+      </h6>
+      <span class="text-muted small">{{ item.enrollment.course.professor.get_full_name }}</span>
+    </div>
+    <div class="d-flex align-items-center gap-3">
+      <div class="text-center">
+        <div class="fw-bold fs-4 text-{{ item.status }}">{{ item.percentage }}%</div>
+        <div class="text-muted small">Attendance Rate</div>
+      </div>
+      <div class="text-center">
+        <div class="progress" style="width:80px;height:8px;">
+          <div class="progress-bar bg-{{ item.status }}" style="width:{{ item.percentage }}%"></div>
+        </div>
+        {% if item.percentage < 75 %}
+          <div class="text-danger small mt-1"><i class="fas fa-exclamation-triangle me-1"></i>Below 75%</div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <!-- Summary badges -->
+  <div class="card-body border-bottom py-2 d-flex gap-3 flex-wrap">
+    <span class="badge bg-success fs-6 fw-normal">
+      <i class="fas fa-check me-1"></i>{{ item.present }} Present
+    </span>
+    <span class="badge bg-danger fs-6 fw-normal">
+      <i class="fas fa-times me-1"></i>{{ item.absent }} Absent
+    </span>
+    <span class="badge bg-info text-dark fs-6 fw-normal">
+      <i class="fas fa-info-circle me-1"></i>{{ item.excused }} Excused
+    </span>
+    <span class="text-muted ms-auto small align-self-center">{{ item.total }} total sessions</span>
+  </div>
+
+  <!-- Recent records -->
+  {% if item.records %}
+  <div class="card-body p-0">
+    <div class="table-responsive">
+      <table class="table table-sm table-hover mb-0">
+        <thead class="table-light">
+          <tr><th>Date</th><th>Type</th><th>Topic</th><th>Status</th><th>Note</th></tr>
+        </thead>
+        <tbody>
+          {% for record in item.records %}
+          <tr>
+            <td class="small">{{ record.session.date|date:"M d, Y" }}</td>
+            <td class="small text-muted">{{ record.session.get_session_type_display }}</td>
+            <td class="small text-muted">{{ record.session.topic|truncatechars:30|default:"—" }}</td>
+            <td>
+              <span class="badge bg-{{ record.status_badge_class }}">
+                {{ record.get_status_display }}
+              </span>
+            </td>
+            <td class="small text-muted">{{ record.excuse_reason|default:record.notes|default:"—"|truncatechars:30 }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  {% endif %}
+</div>
+{% empty %}
+<div class="text-center text-muted py-5">
+  <i class="fas fa-calendar-times fa-3x mb-3"></i>
+  <p>No attendance records found. You may not be enrolled in any courses yet.</p>
+  <a href="{% url 'courses:self_enroll' %}" class="btn btn-primary">Enroll in a Course</a>
+</div>
+{% endfor %}
+{% endblock %}

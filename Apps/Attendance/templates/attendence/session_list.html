@@ -1,0 +1,142 @@
+{% extends 'base.html' %}
+{% block title %}Attendance Sessions{% endblock %}
+{% block breadcrumb %}<li class="breadcrumb-item active">Attendance</li>{% endblock %}
+{% block page_header %}
+<div class="page-header">
+  <h1 class="page-title"><i class="fas fa-user-check me-2"></i>Attendance Sessions</h1>
+  <div class="page-actions">
+    <a href="{% url 'attendance:session_create' %}" class="btn btn-primary">
+      <i class="fas fa-plus me-1"></i>New Session
+    </a>
+  </div>
+</div>
+{% endblock %}
+{% block content %}
+
+<!-- Filters -->
+<div class="card shadow-sm mb-4">
+  <div class="card-body py-3">
+    <form method="get" class="row g-2 align-items-end">
+      <div class="col-md-4">
+        <select name="course" class="form-select">
+          <option value="">All Courses</option>
+          {% for c in courses %}
+            <option value="{{ c.pk }}" {% if filter_course == c.pk|stringformat:"s" %}selected{% endif %}>
+              {{ c.course_code }} — {{ c.title }}
+            </option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-md-3">
+        <input type="date" name="date_from" class="form-control" placeholder="From" value="{{ filter_date_from }}">
+      </div>
+      <div class="col-md-3">
+        <input type="date" name="date_to" class="form-control" placeholder="To" value="{{ filter_date_to }}">
+      </div>
+      <div class="col-md-2 d-flex gap-2">
+        <button type="submit" class="btn btn-primary"><i class="fas fa-search"></i></button>
+        <a href="{% url 'attendance:session_list' %}" class="btn btn-outline-secondary"><i class="fas fa-times"></i></a>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="card shadow-sm">
+  <div class="card-body p-0">
+    <div class="table-responsive">
+      <table class="table table-hover align-middle mb-0">
+        <thead class="table-light">
+          <tr>
+            <th>Course</th>
+            <th>Date</th>
+            <th>Type</th>
+            <th>Topic</th>
+            <th>Present</th>
+            <th>Rate</th>
+            <th>Status</th>
+            <th class="text-end">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for session in sessions %}
+          <tr>
+            <td>
+              <a href="{% url 'courses:detail' session.course.pk %}" class="fw-semibold text-decoration-none">
+                {{ session.course.course_code }}
+              </a>
+              <div class="text-muted small">{{ session.course.title|truncatechars:25 }}</div>
+            </td>
+            <td>
+              <div class="fw-semibold">{{ session.date|date:"M d, Y" }}</div>
+              <div class="text-muted small">{{ session.date|date:"l" }}</div>
+            </td>
+            <td><span class="badge bg-secondary">{{ session.get_session_type_display }}</span></td>
+            <td class="text-muted small">{{ session.topic|truncatechars:30|default:"—" }}</td>
+            <td>
+              <span class="text-success fw-semibold">{{ session.present_count }}</span>
+              <span class="text-muted">/{{ session.total_students }}</span>
+            </td>
+            <td>
+              {% with rate=session.attendance_rate %}
+              <div class="d-flex align-items-center gap-2">
+                <div class="progress flex-grow-1" style="height:6px;min-width:60px;">
+                  <div class="progress-bar bg-{% if rate >= 75 %}success{% elif rate >= 50 %}warning{% else %}danger{% endif %}"
+                       style="width:{{ rate }}%"></div>
+                </div>
+                <span class="small text-muted">{{ rate }}%</span>
+              </div>
+              {% endwith %}
+            </td>
+            <td>
+              {% if session.is_locked %}
+                <span class="badge bg-secondary"><i class="fas fa-lock me-1"></i>Locked</span>
+              {% else %}
+                <span class="badge bg-success">Open</span>
+              {% endif %}
+            </td>
+            <td class="text-end">
+              <a href="{% url 'attendance:mark' session.pk %}" class="btn btn-xs btn-outline-primary me-1" title="Mark Attendance">
+                <i class="fas fa-edit"></i>
+              </a>
+              <a href="{% url 'attendance:session_detail' session.pk %}" class="btn btn-xs btn-outline-info me-1" title="View">
+                <i class="fas fa-eye"></i>
+              </a>
+              {% if request.user.is_admin or request.user.is_superuser %}
+              <form method="post" action="{% url 'attendance:toggle_lock' session.pk %}" class="d-inline">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-xs {% if session.is_locked %}btn-outline-success{% else %}btn-outline-warning{% endif %}" title="{% if session.is_locked %}Unlock{% else %}Lock{% endif %}">
+                  <i class="fas fa-{% if session.is_locked %}unlock{% else %}lock{% endif %}"></i>
+                </button>
+              </form>
+              {% endif %}
+            </td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="8" class="text-center text-muted py-5">
+              <i class="fas fa-calendar-times fa-2x mb-2 d-block"></i>
+              No attendance sessions found.
+              <a href="{% url 'attendance:session_create' %}">Create one</a>.
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+{% if is_paginated %}
+<nav class="mt-4">
+  <ul class="pagination justify-content-center">
+    {% if page_obj.has_previous %}
+      <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}">Previous</a></li>
+    {% endif %}
+    <li class="page-item disabled"><span class="page-link">{{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span></li>
+    {% if page_obj.has_next %}
+      <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}">Next</a></li>
+    {% endif %}
+  </ul>
+</nav>
+{% endif %}
+{% endblock %}

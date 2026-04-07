@@ -1,0 +1,44 @@
+{% extends 'base.html' %}
+{% block title %}My Grades{% endblock %}
+{% block breadcrumb %}<li class="breadcrumb-item active">My Grades</li>{% endblock %}
+{% block page_header %}<div class="page-header"><h1 class="page-title"><i class="fas fa-chart-line me-2"></i>My Grade Report</h1></div>{% endblock %}
+{% block content %}
+<div class="row g-3 mb-4">
+  <div class="col-md-3"><div class="stat-card stat-card-success"><div class="stat-value">{{ gpa|floatformat:2 }}</div><div class="stat-label">Cumulative GPA</div></div></div>
+  <div class="col-md-3"><div class="stat-card stat-card-primary"><div class="stat-value">{{ finalized_count }}</div><div class="stat-label">Finalized Grades</div></div></div>
+  <div class="col-md-3"><div class="stat-card stat-card-warning"><div class="stat-value">{{ pending_count }}</div><div class="stat-label">Pending</div></div></div>
+  <div class="col-md-3"><div class="stat-card stat-card-info"><div class="stat-value">{{ grades|length }}</div><div class="stat-label">Total Courses</div></div></div>
+</div>
+<div class="card shadow-sm">
+  <div class="card-header"><h6 class="mb-0">Grade Transcript</h6></div>
+  <div class="card-body p-0">
+    <div class="table-responsive">
+      <table class="table table-hover align-middle mb-0">
+        <thead class="table-light"><tr><th>Course</th><th>Semester</th><th>Score</th><th>Grade</th><th>GPA Pts</th><th>Status</th><th>Remarks</th></tr></thead>
+        <tbody>
+          {% for g in grades %}
+          <tr>
+            <td>
+              <a href="{% url 'courses:detail' g.enrollment.course.pk %}" class="fw-semibold text-decoration-none">{{ g.enrollment.course.course_code }}</a>
+              <div class="text-muted small">{{ g.enrollment.course.title|truncatechars:30 }}</div>
+            </td>
+            <td class="text-muted small">{{ g.enrollment.course.semester }} {{ g.enrollment.course.academic_year }}</td>
+            <td>{% if g.numeric_score %}{{ g.numeric_score }}%{% else %}—{% endif %}</td>
+            <td>
+              {% if g.letter_grade %}
+              <span class="badge fs-6 bg-{% if g.letter_grade.0 == 'A' %}success{% elif g.letter_grade.0 == 'B' %}primary{% elif g.letter_grade.0 == 'C' %}warning{% else %}danger{% endif %}">{{ g.letter_grade }}</span>
+              {% else %}<span class="text-muted">Pending</span>{% endif %}
+            </td>
+            <td>{{ g.grade_points }}</td>
+            <td>{% if g.is_finalized %}<span class="badge bg-success">Final</span>{% else %}<span class="badge bg-warning text-dark">Pending</span>{% endif %}</td>
+            <td class="text-muted small">{{ g.remarks|truncatechars:40|default:"—" }}</td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="7" class="text-center text-muted py-5">No grades yet.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}

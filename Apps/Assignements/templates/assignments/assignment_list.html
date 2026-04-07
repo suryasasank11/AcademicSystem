@@ -1,0 +1,127 @@
+{% extends 'base.html' %}
+{% block title %}Assignments{% endblock %}
+{% block breadcrumb %}<li class="breadcrumb-item active">Assignments</li>{% endblock %}
+{% block page_header %}
+<div class="page-header">
+  <h1 class="page-title"><i class="fas fa-tasks me-2"></i>Assignments</h1>
+  <div class="page-actions">
+    {% if not request.user.is_student %}
+    <a href="{% url 'assignments:create' %}" class="btn btn-primary">
+      <i class="fas fa-plus me-1"></i>New Assignment
+    </a>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}
+{% block content %}
+
+<!-- Filters -->
+<div class="card shadow-sm mb-4">
+  <div class="card-body py-3">
+    <form method="get" class="row g-2 align-items-end">
+      <div class="col-md-3">
+        <input type="search" name="q" class="form-control" placeholder="Search title..." value="{{ search_query }}">
+      </div>
+      {% if not request.user.is_student %}
+      <div class="col-md-3">
+        <select name="course" class="form-select">
+          <option value="">All Courses</option>
+          {% for c in courses %}
+            <option value="{{ c.pk }}" {% if filter_course == c.pk|stringformat:"s" %}selected{% endif %}>
+              {{ c.course_code }}
+            </option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-md-2">
+        <select name="status" class="form-select">
+          <option value="">All Status</option>
+          {% for val, label in status_choices %}
+            <option value="{{ val }}" {% if filter_status == val %}selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      {% endif %}
+      <div class="col-md-2">
+        <select name="due" class="form-select">
+          <option value="">All Dates</option>
+          <option value="upcoming" {% if filter_due == 'upcoming' %}selected{% endif %}>Upcoming</option>
+          <option value="overdue" {% if filter_due == 'overdue' %}selected{% endif %}>Overdue</option>
+        </select>
+      </div>
+      <div class="col-md-2 d-flex gap-2">
+        <button type="submit" class="btn btn-primary"><i class="fas fa-search"></i></button>
+        <a href="{% url 'assignments:list' %}" class="btn btn-outline-secondary"><i class="fas fa-times"></i></a>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Assignment Cards -->
+<div class="row g-3">
+  {% for assignment in assignments %}
+  <div class="col-md-6 col-lg-4">
+    <div class="card shadow-sm h-100 {% if assignment.is_overdue %}border-danger{% endif %}">
+      <div class="card-header d-flex justify-content-between align-items-start">
+        <div>
+          <span class="badge bg-secondary">{{ assignment.get_assignment_type_display }}</span>
+          {% if not request.user.is_student %}
+          <span class="badge bg-{% if assignment.status == 'published' %}success{% elif assignment.status == 'draft' %}secondary{% elif assignment.status == 'closed' %}primary{% else %}info{% endif %} ms-1">
+            {{ assignment.get_status_display }}
+          </span>
+          {% endif %}
+        </div>
+        <span class="badge bg-{{ assignment.due_date_badge_class }}">
+          Due {{ assignment.due_date|date:"M d" }}
+        </span>
+      </div>
+      <div class="card-body">
+        <h6 class="fw-bold mb-1">
+          <a href="{% url 'assignments:detail' assignment.pk %}" class="text-decoration-none text-dark">
+            {{ assignment.title }}
+          </a>
+        </h6>
+        <p class="text-muted small mb-2">
+          <i class="fas fa-book me-1"></i>{{ assignment.course.course_code }}
+          {% if assignment.weight %}<span class="ms-2"><i class="fas fa-percent me-1"></i>{{ assignment.weight }}% of grade</span>{% endif %}
+        </p>
+        <p class="text-muted small mb-0">{{ assignment.description|truncatechars:90 }}</p>
+      </div>
+      <div class="card-footer bg-transparent d-flex justify-content-between align-items-center">
+        <span class="text-muted small">
+          <i class="fas fa-star me-1"></i>{{ assignment.max_score }} pts
+        </span>
+        <div class="d-flex gap-1">
+          <a href="{% url 'assignments:detail' assignment.pk %}" class="btn btn-sm btn-outline-primary">
+            {% if request.user.is_student %}View{% else %}Manage{% endif %}
+          </a>
+          {% if request.user.is_student %}
+            <a href="{% url 'assignments:submit' assignment.pk %}" class="btn btn-sm btn-success">
+              <i class="fas fa-upload me-1"></i>Submit
+            </a>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+  {% empty %}
+  <div class="col-12 text-center text-muted py-5">
+    <i class="fas fa-tasks fa-3x mb-3"></i>
+    <p>No assignments found.</p>
+    {% if not request.user.is_student %}
+    <a href="{% url 'assignments:create' %}" class="btn btn-primary">Create Assignment</a>
+    {% endif %}
+  </div>
+  {% endfor %}
+</div>
+
+{% if is_paginated %}
+<nav class="mt-4">
+  <ul class="pagination justify-content-center">
+    {% if page_obj.has_previous %}<li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}">Previous</a></li>{% endif %}
+    <li class="page-item disabled"><span class="page-link">{{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span></li>
+    {% if page_obj.has_next %}<li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}">Next</a></li>{% endif %}
+  </ul>
+</nav>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,34 @@
+{% extends 'base.html' %}
+{% block title %}Admin Grade Override{% endblock %}
+{% block page_header %}<div class="page-header"><h1 class="page-title text-warning"><i class="fas fa-exclamation-triangle me-2"></i>Admin Grade Override</h1></div>{% endblock %}
+{% block content %}
+<div class="row justify-content-center"><div class="col-lg-6">
+<div class="alert alert-warning"><i class="fas fa-exclamation-triangle me-2"></i>You are overriding a finalized grade. This action is logged in the audit trail.</div>
+<div class="card shadow-sm">
+  <div class="card-header">
+    <strong>{{ grade.enrollment.student.user.get_full_name }}</strong> — {{ grade.enrollment.course.course_code }}
+  </div>
+  <div class="card-body p-4">
+    <form method="post" novalidate>
+      {% csrf_token %}
+      <div class="row g-3">
+        <div class="col-md-6"><label class="form-label fw-semibold">New Score (%)</label>{{ form.numeric_score }}</div>
+        <div class="col-md-6"><label class="form-label fw-semibold">New Letter Grade</label>{{ form.letter_grade }}</div>
+        <div class="col-12"><label class="form-label fw-semibold">Remarks</label>{{ form.remarks }}</div>
+        <div class="col-12">
+          <label class="form-label fw-semibold text-danger">Reason for Override *</label>
+          <input type="text" name="change_reason" class="form-control" placeholder="Explain why this grade is being overridden..." required>
+        </div>
+        <div class="col-12">
+          <div class="form-check">{{ form.is_finalized }}<label class="form-check-label" for="{{ form.is_finalized.id_for_label }}">Keep as finalized</label></div>
+        </div>
+      </div>
+      <div class="d-flex gap-2 mt-4">
+        <button type="submit" class="btn btn-warning"><i class="fas fa-exclamation-triangle me-1"></i>Override Grade</button>
+        <a href="{% url 'grades:detail' grade.pk %}" class="btn btn-outline-secondary">Cancel</a>
+      </div>
+    </form>
+  </div>
+</div>
+</div></div>
+{% endblock %}

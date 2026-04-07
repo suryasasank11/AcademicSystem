@@ -1,0 +1,72 @@
+{% extends 'base.html' %}
+{% block title %}Grade Submission{% endblock %}
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'assignments:list' %}">Assignments</a></li>
+<li class="breadcrumb-item"><a href="{% url 'assignments:detail' submission.assignment.pk %}">{{ submission.assignment.title|truncatechars:20 }}</a></li>
+<li class="breadcrumb-item active">Grade</li>
+{% endblock %}
+{% block page_header %}
+<div class="page-header">
+  <h1 class="page-title"><i class="fas fa-star me-2"></i>Grade Submission — {{ submission.student.user.get_full_name }}</h1>
+</div>
+{% endblock %}
+{% block content %}
+<div class="row g-4">
+  <div class="col-lg-4">
+    <div class="card shadow-sm">
+      <div class="card-header"><h6 class="mb-0">Submission Summary</h6></div>
+      <div class="card-body">
+        <table class="table table-sm table-borderless mb-0">
+          <tr><td class="text-muted">Student</td><td class="fw-semibold">{{ submission.student.user.get_full_name }}</td></tr>
+          <tr><td class="text-muted">Assignment</td><td>{{ submission.assignment.title|truncatechars:25 }}</td></tr>
+          <tr><td class="text-muted">Max Score</td><td class="fw-bold">{{ submission.assignment.max_score }}</td></tr>
+          <tr><td class="text-muted">Submitted</td><td class="small">{{ submission.submitted_at|date:"M d H:i"|default:"—" }}</td></tr>
+          <tr><td class="text-muted">Status</td><td><span class="badge bg-{{ submission.status_badge_class }}">{{ submission.get_status_display }}</span></td></tr>
+          {% if submission.is_late %}<tr><td colspan="2"><span class="badge bg-warning text-dark">Late Submission ({{ submission.assignment.late_penalty_percent }}% penalty)</span></td></tr>{% endif %}
+        </table>
+        <hr>
+        <a href="{% url 'assignments:submission_detail' submission.pk %}" class="btn btn-sm btn-outline-primary w-100">
+          <i class="fas fa-eye me-1"></i>View Submission
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-8">
+    {% if submission.submission_text %}
+    <div class="card shadow-sm mb-3">
+      <div class="card-header"><h6 class="mb-0">Student's Response</h6></div>
+      <div class="card-body" style="max-height:200px;overflow-y:auto;white-space:pre-wrap;font-size:0.9rem;">{{ submission.submission_text|truncatechars:800 }}</div>
+    </div>
+    {% endif %}
+
+    <div class="card shadow-sm">
+      <div class="card-header"><h6 class="mb-0">Enter Grade</h6></div>
+      <div class="card-body p-4">
+        <form method="post" novalidate>
+          {% csrf_token %}
+          <div class="mb-3">
+            <label class="form-label fw-semibold">Score <span class="text-muted small">(max: {{ submission.assignment.max_score }})</span></label>
+            {{ form.score }}
+            {% if form.score.errors %}<div class="invalid-feedback d-block">{{ form.score.errors.0 }}</div>{% endif %}
+          </div>
+          <div class="mb-4">
+            <label class="form-label fw-semibold">Feedback for Student</label>
+            {{ form.feedback }}
+          </div>
+          <div class="form-check mb-4">
+            {{ form.is_graded }}
+            <label class="form-check-label fw-semibold" for="{{ form.is_graded.id_for_label }}">
+              Mark as Graded (makes score visible to student)
+            </label>
+          </div>
+          <div class="d-flex gap-2">
+            <button type="submit" class="btn btn-primary"><i class="fas fa-save me-1"></i>Save Grade</button>
+            <a href="{% url 'assignments:submission_detail' submission.pk %}" class="btn btn-outline-secondary">Cancel</a>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

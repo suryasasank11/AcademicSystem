@@ -1,0 +1,101 @@
+{% extends 'base.html' %}
+{% block title %}{{ action }} Assignment{% endblock %}
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'assignments:list' %}">Assignments</a></li>
+<li class="breadcrumb-item active">{{ action }}</li>
+{% endblock %}
+{% block page_header %}
+<div class="page-header">
+  <h1 class="page-title"><i class="fas fa-tasks me-2"></i>{{ action }} Assignment</h1>
+</div>
+{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+<div class="col-lg-9">
+<div class="card shadow-sm">
+<div class="card-body p-4">
+<form method="post" enctype="multipart/form-data" novalidate>
+{% csrf_token %}
+<div class="row g-3">
+  <div class="col-md-8">
+    <label class="form-label fw-semibold">Course *</label>
+    {{ form.course }}
+    {% if form.course.errors %}<div class="invalid-feedback d-block">{{ form.course.errors.0 }}</div>{% endif %}
+  </div>
+  <div class="col-md-4">
+    <label class="form-label fw-semibold">Type</label>
+    {{ form.assignment_type }}
+  </div>
+  <div class="col-12">
+    <label class="form-label fw-semibold">Title *</label>
+    {{ form.title }}
+    {% if form.title.errors %}<div class="invalid-feedback d-block">{{ form.title.errors.0 }}</div>{% endif %}
+  </div>
+  <div class="col-12">
+    <label class="form-label fw-semibold">Description / Instructions *</label>
+    {{ form.description }}
+    {% if form.description.errors %}<div class="invalid-feedback d-block">{{ form.description.errors.0 }}</div>{% endif %}
+  </div>
+  <div class="col-md-3">
+    <label class="form-label fw-semibold">Max Score</label>
+    {{ form.max_score }}
+  </div>
+  <div class="col-md-3">
+    <label class="form-label fw-semibold">Weight in Grade (%)</label>
+    {{ form.weight }}
+  </div>
+  <div class="col-md-3">
+    <label class="form-label fw-semibold">Assigned Date</label>
+    {{ form.assigned_date }}
+  </div>
+  <div class="col-md-3">
+    <label class="form-label fw-semibold">Due Date *</label>
+    {{ form.due_date }}
+    {% if form.due_date.errors %}<div class="invalid-feedback d-block">{{ form.due_date.errors.0 }}</div>{% endif %}
+  </div>
+  <div class="col-md-3">
+    <label class="form-label fw-semibold">Status</label>
+    {{ form.status }}
+  </div>
+  <div class="col-md-3">
+    <label class="form-label fw-semibold">Submission Format</label>
+    {{ form.submission_format }}
+  </div>
+  <div class="col-md-3">
+    <label class="form-label fw-semibold">Max Submissions</label>
+    {{ form.max_submissions }}
+  </div>
+  <div class="col-md-3">
+    <label class="form-label fw-semibold">Late Penalty (%)</label>
+    {{ form.late_penalty_percent }}
+  </div>
+  <div class="col-12">
+    <label class="form-label fw-semibold">Attachment</label>
+    {{ form.attachment }}
+  </div>
+  <div class="col-12">
+    <label class="form-label fw-semibold">Reference URL</label>
+    {{ form.reference_url }}
+  </div>
+  <div class="col-md-4 d-flex align-items-center">
+    <div class="form-check">
+      {{ form.late_submission_allowed }}
+      <label class="form-check-label" for="{{ form.late_submission_allowed.id_for_label }}">Allow Late Submissions</label>
+    </div>
+  </div>
+  <div class="col-md-4 d-flex align-items-center">
+    <div class="form-check">
+      {{ form.allow_resubmission }}
+      <label class="form-check-label" for="{{ form.allow_resubmission.id_for_label }}">Allow Resubmission</label>
+    </div>
+  </div>
+</div>
+{% if form.non_field_errors %}<div class="alert alert-danger mt-3">{{ form.non_field_errors.0 }}</div>{% endif %}
+<div class="d-flex gap-2 mt-4">
+  <button type="submit" class="btn btn-primary"><i class="fas fa-save me-1"></i>Save Assignment</button>
+  <a href="{% url 'assignments:list' %}" class="btn btn-outline-secondary">Cancel</a>
+</div>
+</form>
+</div></div>
+</div></div>
+{% endblock %}

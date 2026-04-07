@@ -1,0 +1,17 @@
+{% extends 'base.html' %}{% block title %}Finalize Grade{% endblock %}
+{% block page_header %}<div class="page-header"><h1 class="page-title text-success"><i class="fas fa-lock me-2"></i>Finalize Grade</h1></div>{% endblock %}
+{% block content %}
+<div class="row justify-content-center"><div class="col-md-5">
+<div class="card shadow-sm border-success"><div class="card-body p-4 text-center">
+  <i class="fas fa-lock fa-3x text-success mb-3"></i>
+  <h5>Finalize grade for <strong>{{ grade.enrollment.student.user.get_full_name }}</strong>?</h5>
+  <div class="my-3 fs-2 fw-bold text-success">{{ grade.letter_grade|default:grade.numeric_score }}</div>
+  <p class="text-muted">This grade will be visible to the student and their GPA will be recalculated. You will need admin access to make changes after finalization.</p>
+  <form method="post" class="d-flex gap-2 justify-content-center mt-3">
+    {% csrf_token %}
+    <button type="submit" class="btn btn-success"><i class="fas fa-lock me-1"></i>Yes, Finalize</button>
+    <a href="{% url 'grades:entry' grade.enrollment.pk %}" class="btn btn-outline-secondary">Cancel</a>
+  </form>
+</div></div>
+</div></div>
+{% endblock %}

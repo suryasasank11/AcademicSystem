@@ -1,0 +1,156 @@
+{% extends 'base.html' %}
+{% block title %}{{ assignment.title }}{% endblock %}
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'assignments:list' %}">Assignments</a></li>
+<li class="breadcrumb-item active">{{ assignment.title|truncatechars:30 }}</li>
+{% endblock %}
+{% block page_header %}
+<div class="page-header">
+  <h1 class="page-title"><i class="fas fa-tasks me-2"></i>{{ assignment.title }}</h1>
+  <div class="page-actions">
+    {% if request.user.is_student and can_submit %}
+      <a href="{% url 'assignments:submit' assignment.pk %}" class="btn btn-success">
+        <i class="fas fa-upload me-1"></i>
+        {% if my_submission %}Resubmit{% else %}Submit{% endif %}
+      </a>
+    {% endif %}
+    {% if not request.user.is_student %}
+      <a href="{% url 'assignments:edit' assignment.pk %}" class="btn btn-outline-primary"><i class="fas fa-edit me-1"></i>Edit</a>
+      <a href="{% url 'assignments:submissions' assignment.pk %}" class="btn btn-outline-info">
+        <i class="fas fa-inbox me-1"></i>Submissions
+        {% if pending_count %}<span class="badge bg-danger ms-1">{{ pending_count }}</span>{% endif %}
+      </a>
+      <form method="post" action="{% url 'assignments:toggle_status' assignment.pk %}" class="d-inline">
+        {% csrf_token %}
+        {% if assignment.status == 'draft' %}
+          <button name="action" value="publish" class="btn btn-success"><i class="fas fa-globe me-1"></i>Publish</button>
+        {% elif assignment.status == 'published' %}
+          <button name="action" value="close" class="btn btn-outline-secondary"><i class="fas fa-lock me-1"></i>Close</button>
+        {% elif assignment.status == 'closed' %}
+          <button name="action" value="reopen" class="btn btn-outline-warning"><i class="fas fa-unlock me-1"></i>Reopen</button>
+        {% endif %}
+      </form>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}
+{% block content %}
+<div class="row g-4">
+
+  <!-- Left: Info -->
+  <div class="col-lg-4">
+    <div class="card shadow-sm mb-3">
+      <div class="card-header"><h6 class="mb-0">Assignment Details</h6></div>
+      <div class="card-body">
+        <table class="table table-sm table-borderless mb-0">
+          <tr><td class="text-muted">Course</td><td><a href="{% url 'courses:detail' assignment.course.pk %}">{{ assignment.course.course_code }}</a></td></tr>
+          <tr><td class="text-muted">Type</td><td>{{ assignment.get_assignment_type_display }}</td></tr>
+          <tr><td class="text-muted">Max Score</td><td><strong>{{ assignment.max_score }} pts</strong></td></tr>
+          {% if assignment.weight %}<tr><td class="text-muted">Weight</td><td>{{ assignment.weight }}% of grade</td></tr>{% endif %}
+          <tr><td class="text-muted">Assigned</td><td>{{ assignment.assigned_date|date:"M d, Y" }}</td></tr>
+          <tr>
+            <td class="text-muted">Due</td>
+            <td><strong class="text-{{ assignment.due_date_badge_class }}">{{ assignment.due_date|date:"M d, Y H:i" }}</strong></td>
+          </tr>
+          <tr><td class="text-muted">Status</td>
+            <td><span class="badge bg-{% if assignment.status == 'published' %}success{% elif assignment.status == 'draft' %}secondary{% elif assignment.status == 'closed' %}primary{% else %}info{% endif %}">{{ assignment.get_status_display }}</span></td>
+          </tr>
+          {% if assignment.late_submission_allowed %}
+          <tr><td class="text-muted">Late</td><td class="text-warning small">Allowed ({{ assignment.late_penalty_percent }}% penalty)</td></tr>
+          {% endif %}
+          {% if assignment.submission_format %}
+          <tr><td class="text-muted">Format</td><td class="small">{{ assignment.submission_format }}</td></tr>
+          {% endif %}
+        </table>
+        {% if assignment.attachment %}
+        <hr>
+        <a href="{{ assignment.attachment.url }}" class="btn btn-outline-primary btn-sm w-100" target="_blank">
+          <i class="fas fa-download me-1"></i>Download Attachment
+        </a>
+        {% endif %}
+        {% if assignment.reference_url %}
+        <a href="{{ assignment.reference_url }}" class="btn btn-outline-secondary btn-sm w-100 mt-2" target="_blank">
+          <i class="fas fa-external-link-alt me-1"></i>Reference Link
+        </a>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Student: my submission status -->
+    {% if request.user.is_student and my_submission %}
+    <div class="card shadow-sm {% if my_submission.is_graded %}border-success{% else %}border-primary{% endif %}">
+      <div class="card-header bg-{% if my_submission.is_graded %}success{% else %}primary{% endif %} bg-opacity-10">
+        <h6 class="mb-0">My Submission</h6>
+      </div>
+      <div class="card-body">
+        <table class="table table-sm table-borderless mb-2">
+          <tr><td class="text-muted">Status</td><td><span class="badge bg-{{ my_submission.status_badge_class }}">{{ my_submission.get_status_display }}</span></td></tr>
+          <tr><td class="text-muted">Submitted</td><td class="small">{{ my_submission.submitted_at|date:"M d, H:i" }}</td></tr>
+          {% if my_submission.is_graded %}
+          <tr><td class="text-muted">Score</td><td class="fw-bold text-success">{{ my_submission.adjusted_score }}/{{ assignment.max_score }}</td></tr>
+          <tr><td class="text-muted">Percent</td><td class="fw-bold">{{ my_submission.score_percentage }}%</td></tr>
+          {% endif %}
+        </table>
+        <a href="{% url 'assignments:submission_detail' my_submission.pk %}" class="btn btn-sm btn-outline-primary w-100">
+          View Submission
+        </a>
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- Professor stats -->
+    {% if not request.user.is_student %}
+    <div class="card shadow-sm">
+      <div class="card-header"><h6 class="mb-0">Submission Stats</h6></div>
+      <div class="card-body">
+        <table class="table table-sm table-borderless mb-0">
+          <tr><td class="text-muted">Total</td><td class="fw-bold">{{ submission_count }}</td></tr>
+          <tr><td class="text-muted">Graded</td><td class="fw-bold text-success">{{ graded_count }}</td></tr>
+          <tr><td class="text-muted">Pending</td><td class="fw-bold text-warning">{{ pending_count }}</td></tr>
+        </table>
+        <a href="{% url 'assignments:submissions' assignment.pk %}" class="btn btn-sm btn-primary w-100 mt-2">
+          <i class="fas fa-inbox me-1"></i>View All Submissions
+        </a>
+      </div>
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- Right: Description & Submissions -->
+  <div class="col-lg-8">
+    <div class="card shadow-sm mb-4">
+      <div class="card-header"><h6 class="mb-0"><i class="fas fa-align-left me-2"></i>Instructions</h6></div>
+      <div class="card-body">
+        <div style="line-height:1.8;">{{ assignment.description|linebreaks }}</div>
+      </div>
+    </div>
+
+    {% if not request.user.is_student and submissions %}
+    <div class="card shadow-sm">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <h6 class="mb-0"><i class="fas fa-inbox me-2"></i>Recent Submissions</h6>
+        <a href="{% url 'assignments:submissions' assignment.pk %}" class="btn btn-sm btn-outline-primary">All</a>
+      </div>
+      <div class="card-body p-0">
+        <div class="table-responsive">
+          <table class="table table-hover mb-0">
+            <thead class="table-light"><tr><th>Student</th><th>Submitted</th><th>Status</th><th>Score</th><th></th></tr></thead>
+            <tbody>
+              {% for sub in submissions|slice:":6" %}
+              <tr>
+                <td class="fw-semibold small">{{ sub.student.user.get_full_name }}</td>
+                <td class="text-muted small">{{ sub.submitted_at|date:"M d H:i" }}</td>
+                <td><span class="badge bg-{{ sub.status_badge_class }}">{{ sub.get_status_display }}</span></td>
+                <td>{% if sub.score %}{{ sub.score }}/{{ assignment.max_score }}{% else %}—{% endif %}</td>
+                <td><a href="{% url 'assignments:submission_detail' sub.pk %}" class="btn btn-xs btn-outline-primary">Grade</a></td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

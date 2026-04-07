@@ -1,0 +1,135 @@
+{% extends 'base.html' %}
+{% block title %}Mark Attendance{% endblock %}
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'attendance:session_list' %}">Attendance</a></li>
+<li class="breadcrumb-item active">Mark</li>
+{% endblock %}
+{% block page_header %}
+<div class="page-header">
+  <h1 class="page-title">
+    <i class="fas fa-user-check me-2"></i>
+    Mark Attendance — {{ session.course.course_code }} ({{ session.date|date:"M d, Y" }})
+  </h1>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.attendance-row { transition: background 0.15s; }
+.attendance-row:hover { background: #f8f9fa; }
+.status-btn-group .btn { font-size: 0.78rem; padding: 3px 10px; }
+.status-btn-group .btn.active-status { font-weight: 700; box-shadow: 0 0 0 2px currentColor; }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<!-- Quick-mark toolbar -->
+<div class="card shadow-sm mb-3">
+  <div class="card-body py-2 d-flex align-items-center gap-3 flex-wrap">
+    <span class="fw-semibold text-muted small">Mark All As:</span>
+    <button type="button" class="btn btn-sm btn-success" id="markAllPresent">
+      <i class="fas fa-check me-1"></i>All Present
+    </button>
+    <button type="button" class="btn btn-sm btn-danger" id="markAllAbsent">
+      <i class="fas fa-times me-1"></i>All Absent
+    </button>
+    <span class="ms-auto text-muted small">
+      {{ enrollments|length }} student(s) enrolled
+      {% if session.topic %}· <em>{{ session.topic }}</em>{% endif %}
+    </span>
+  </div>
+</div>
+
+<form method="post" novalidate id="attendanceForm">
+  {% csrf_token %}
+  <div class="card shadow-sm">
+    <div class="card-body p-0">
+      <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0" id="attendanceTable">
+          <thead class="table-light">
+            <tr>
+              <th>#</th>
+              <th>Student</th>
+              <th style="min-width:240px;">Status</th>
+              <th style="min-width:180px;">Excuse Reason</th>
+              <th style="min-width:150px;">Notes</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for enrollment, status_field, excuse_field, notes_field in form.iter_enrollments_with_fields %}
+            <tr class="attendance-row" data-row="{{ forloop.counter }}">
+              <td class="text-muted">{{ forloop.counter }}</td>
+              <td>
+                <div class="fw-semibold">{{ enrollment.student.user.get_full_name }}</div>
+                <div class="text-muted small">{{ enrollment.student.student_id }}</div>
+              </td>
+              <td>
+                <div class="status-btn-group d-flex gap-1 flex-wrap">
+                  {{ status_field }}
+                </div>
+              </td>
+              <td>{{ excuse_field }}</td>
+              <td>{{ notes_field }}</td>
+            </tr>
+            {% empty %}
+            <tr>
+              <td colspan="5" class="text-center text-muted py-5">
+                No enrolled students found for this course.
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div class="card-footer d-flex gap-2 justify-content-between align-items-center">
+      <span class="text-muted small">
+        <span id="presentCount" class="text-success fw-bold">0</span> present ·
+        <span id="absentCount" class="text-danger fw-bold">0</span> absent ·
+        <span id="lateCount" class="text-warning fw-bold">0</span> late
+      </span>
+      <div class="d-flex gap-2">
+        <button type="submit" class="btn btn-primary">
+          <i class="fas fa-save me-1"></i>Save Attendance
+        </button>
+        <a href="{% url 'attendance:session_detail' session.pk %}" class="btn btn-outline-secondary">Cancel</a>
+      </div>
+    </div>
+  </div>
+</form>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+
+  function updateCounts() {
+    const selects = document.querySelectorAll('select[name$="_status"]');
+    let present = 0, absent = 0, late = 0;
+    selects.forEach(s => {
+      if (s.value === 'present') present++;
+      else if (s.value === 'absent') absent++;
+      else if (s.value === 'late') late++;
+    });
+    document.getElementById('presentCount').textContent = present;
+    document.getElementById('absentCount').textContent = absent;
+    document.getElementById('lateCount').textContent = late;
+  }
+
+  function markAll(status) {
+    document.querySelectorAll('select[name$="_status"]').forEach(s => { s.value = status; });
+    updateCounts();
+  }
+
+  document.getElementById('markAllPresent').addEventListener('click', () => markAll('present'));
+  document.getElementById('markAllAbsent').addEventListener('click', () => markAll('absent'));
+
+  document.querySelectorAll('select[name$="_status"]').forEach(s => {
+    s.addEventListener('change', updateCounts);
+  });
+
+  updateCounts();
+});
+</script>
+{% endblock %}

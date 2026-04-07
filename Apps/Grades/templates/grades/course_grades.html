@@ -1,0 +1,69 @@
+{% extends 'base.html' %}
+{% block title %}Course Grades — {{ course.course_code }}{% endblock %}
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'grades:list' %}">Grades</a></li>
+<li class="breadcrumb-item active">{{ course.course_code }}</li>
+{% endblock %}
+{% block page_header %}
+<div class="page-header">
+  <h1 class="page-title"><i class="fas fa-chart-bar me-2"></i>{{ course.course_code }} — Grade Overview</h1>
+  <div class="page-actions">
+    <a href="{% url 'grades:bulk_entry' course.pk %}" class="btn btn-primary"><i class="fas fa-star me-1"></i>Enter Grades</a>
+    <a href="{% url 'grades:components' course.pk %}" class="btn btn-outline-secondary"><i class="fas fa-percent me-1"></i>Components</a>
+  </div>
+</div>
+{% endblock %}
+{% block content %}
+<div class="row g-3 mb-4">
+  <div class="col-md-3"><div class="stat-card stat-card-primary"><div class="stat-value">{{ total_enrolled }}</div><div class="stat-label">Enrolled</div></div></div>
+  <div class="col-md-3"><div class="stat-card stat-card-success"><div class="stat-value">{{ graded_count }}</div><div class="stat-label">Graded</div></div></div>
+  <div class="col-md-3"><div class="stat-card stat-card-info"><div class="stat-value">{{ finalized_count }}</div><div class="stat-label">Finalized</div></div></div>
+  <div class="col-md-3"><div class="stat-card stat-card-warning"><div class="stat-value">{{ avg_score|floatformat:1|default:"—" }}%</div><div class="stat-label">Class Average</div></div></div>
+</div>
+
+{% if distribution %}
+<div class="card shadow-sm mb-4">
+  <div class="card-header"><h6 class="mb-0">Grade Distribution</h6></div>
+  <div class="card-body">
+    <div class="d-flex gap-2 flex-wrap">
+      {% for letter, count in distribution.items %}
+      <div class="text-center p-3 rounded bg-light" style="min-width:70px;">
+        <div class="fw-bold fs-5 text-{% if letter == 'A' %}success{% elif letter == 'B' %}primary{% elif letter == 'C' %}warning{% else %}danger{% endif %}">{{ letter }}</div>
+        <div class="text-muted small">{{ count }} student{{ count|pluralize }}</div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+{% endif %}
+
+<div class="card shadow-sm">
+  <div class="card-body p-0">
+    <div class="table-responsive">
+      <table class="table table-hover align-middle mb-0">
+        <thead class="table-light"><tr><th>Student</th><th>Score</th><th>Grade</th><th>Attendance</th><th>Finalized</th><th class="text-end">Actions</th></tr></thead>
+        <tbody>
+          {% for e in enrollments %}
+          <tr>
+            <td><div class="fw-semibold">{{ e.student.user.get_full_name }}</div><div class="text-muted small">{{ e.student.student_id }}</div></td>
+            <td>{% if e.final_grade and e.final_grade.numeric_score %}{{ e.final_grade.numeric_score }}%{% else %}<span class="text-muted">—</span>{% endif %}</td>
+            <td>
+              {% if e.final_grade and e.final_grade.letter_grade %}
+              <span class="badge bg-{% if e.final_grade.letter_grade.0 == 'A' %}success{% elif e.final_grade.letter_grade.0 == 'B' %}primary{% elif e.final_grade.letter_grade.0 == 'C' %}warning{% else %}danger{% endif %}">{{ e.final_grade.letter_grade }}</span>
+              {% else %}<span class="text-muted">Not graded</span>{% endif %}
+            </td>
+            <td><span class="{% if e.attendance_percentage >= 75 %}text-success{% else %}text-danger{% endif %}">{{ e.attendance_percentage }}%</span></td>
+            <td>{% if e.final_grade and e.final_grade.is_finalized %}<i class="fas fa-check text-success"></i>{% else %}<i class="fas fa-clock text-warning"></i>{% endif %}</td>
+            <td class="text-end">
+              <a href="{% url 'grades:entry' e.pk %}" class="btn btn-xs btn-outline-primary"><i class="fas fa-edit"></i></a>
+            </td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="6" class="text-center text-muted py-4">No enrollments found.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}
