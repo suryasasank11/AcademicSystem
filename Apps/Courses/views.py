@@ -43,11 +43,6 @@ class CourseListView(LoginRequiredMixin, RoleContextMixin, ListView):
         user = self.request.user
         qs = Course.objects.select_related(
             'professor', 'department'
-        ).annotate(
-            enrolled_count=Count(
-                'enrollments',
-                filter=Q(enrollments__status='enrolled')
-            )
         )
 
         # Professors only see their own courses

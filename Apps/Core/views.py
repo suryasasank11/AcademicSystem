@@ -69,8 +69,8 @@ def admin_dashboard(request):
     courses_overview = Course.objects.filter(
         status='active'
     ).annotate(
-        enrolled_count=Count('enrollments', filter=Q(enrollments__status='enrolled'))
-    ).order_by('-enrolled_count')[:8]
+        total_enrolled=Count('enrollments', filter=Q(enrollments__status='enrolled'))
+    ).order_by('-total_enrolled')[:8]
 
     # Recent announcements
     announcements = Announcement.objects.select_related(
@@ -113,7 +113,7 @@ def professor_dashboard(request):
     my_courses = Course.objects.filter(
         professor=user, is_active=True
     ).annotate(
-        enrolled_count=Count('enrollments', filter=Q(enrollments__status='enrolled'))
+        total_enrolled=Count('enrollments', filter=Q(enrollments__status='enrolled'))
     ).order_by('course_code')
 
     # Stats for this professor
