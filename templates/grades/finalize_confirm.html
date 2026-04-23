@@ -1,0 +1,64 @@
+{% extends 'base.html' %}
+{% block title %}Finalize Grade{% endblock %}
+{% block content %}
+<div class="container py-5" style="max-width:550px;">
+  <div class="card border-warning shadow">
+    <div class="card-header bg-warning text-dark">
+      <h5 class="mb-0">
+        <i class="fas fa-lock me-2"></i>Finalize Grade
+      </h5>
+    </div>
+    <div class="card-body p-4">
+
+      <div class="alert alert-info">
+        <div class="row">
+          <div class="col-6">
+            <strong>Student:</strong><br>
+            {{ grade.enrollment.student.user.get_full_name }}
+          </div>
+          <div class="col-6">
+            <strong>Course:</strong><br>
+            {{ grade.enrollment.course.title }}
+          </div>
+        </div>
+        <hr class="my-2">
+        <div class="row">
+          <div class="col-4">
+            <strong>Score:</strong><br>
+            {{ grade.numeric_score|default:"—" }}
+          </div>
+          <div class="col-4">
+            <strong>Letter:</strong><br>
+            <span class="fs-5 fw-bold">{{ grade.letter_grade|default:"—" }}</span>
+          </div>
+          <div class="col-4">
+            <strong>GPA Points:</strong><br>
+            {{ grade.grade_points|default:"—" }}
+          </div>
+        </div>
+      </div>
+
+      <div class="alert alert-warning">
+        <i class="fas fa-exclamation-triangle me-1"></i>
+        <strong>Warning:</strong> Once finalized, this grade
+        <strong>cannot be edited</strong>. Make sure the grade
+        is correct before proceeding.
+      </div>
+
+      <form method="POST" action="">
+        {% csrf_token %}
+        <div class="d-flex gap-2 mt-3">
+          <button type="submit" class="btn btn-warning px-4">
+            <i class="fas fa-lock me-1"></i>Yes, Finalize Grade
+          </button>
+          <a href="{{ request.META.HTTP_REFERER|default:'/' }}"
+             class="btn btn-outline-secondary px-4">
+            <i class="fas fa-times me-1"></i>Cancel
+          </a>
+        </div>
+      </form>
+
+    </div>
+  </div>
+</div>
+{% endblock %}

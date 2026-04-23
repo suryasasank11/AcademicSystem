@@ -1,0 +1,228 @@
+{% extends 'base.html' %}
+{% block title %}Session Detail{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'attendance:session_list' %}">Attendance</a></li>
+<li class="breadcrumb-item active">Session Detail</li>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4 py-3">
+
+  <!-- Header -->
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h4 class="mb-0">
+      <i class="fas fa-calendar-check me-2 text-primary"></i>
+      Session Detail
+    </h4>
+    <div class="d-flex gap-2">
+      {% if not session.is_locked %}
+      <a href="{% url 'attendance:mark' session.pk %}" class="btn btn-primary">
+        <i class="fas fa-edit me-1"></i>Mark Attendance
+      </a>
+      {% endif %}
+      <a href="{% url 'attendance:session_list' %}" class="btn btn-outline-secondary">
+        <i class="fas fa-arrow-left me-1"></i>Back
+      </a>
+    </div>
+  </div>
+
+  <!-- Session Info Card -->
+  <div class="card shadow-sm mb-4">
+    <div class="card-header bg-primary text-white">
+      <h5 class="mb-0">
+        <i class="fas fa-info-circle me-2"></i>Session Information
+      </h5>
+    </div>
+    <div class="card-body">
+      <div class="row g-3">
+        <div class="col-md-3">
+          <p class="text-muted mb-1 small">Course</p>
+          <p class="fw-semibold mb-0">{{ session.course.title }}</p>
+        </div>
+        <div class="col-md-2">
+          <p class="text-muted mb-1 small">Course Code</p>
+          <p class="fw-semibold mb-0">{{ session.course.course_code }}</p>
+        </div>
+        <div class="col-md-2">
+          <p class="text-muted mb-1 small">Date</p>
+          <p class="fw-semibold mb-0">{{ session.date|date:"M d, Y" }}</p>
+        </div>
+        <div class="col-md-2">
+          <p class="text-muted mb-1 small">Type</p>
+          <p class="fw-semibold mb-0">{{ session.get_session_type_display }}</p>
+        </div>
+        <div class="col-md-3">
+          <p class="text-muted mb-1 small">Status</p>
+          {% if session.is_locked %}
+          <span class="badge bg-danger fs-6">
+            <i class="fas fa-lock me-1"></i>Locked
+          </span>
+          {% else %}
+          <span class="badge bg-success fs-6">
+            <i class="fas fa-unlock me-1"></i>Open
+          </span>
+          {% endif %}
+        </div>
+      </div>
+      {% if session.topic %}
+      <hr>
+      <p class="text-muted mb-1 small">Topic</p>
+      <p class="mb-0">{{ session.topic }}</p>
+      {% endif %}
+      {% if session.notes %}
+      <hr>
+      <p class="text-muted mb-1 small">Notes</p>
+      <p class="mb-0">{{ session.notes }}</p>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Stats Row -->
+  <div class="row g-3 mb-4">
+    {% with records=session.attendancerecord_set.all %}
+    <div class="col-6 col-md-2">
+      <div class="card text-center border-0 shadow-sm h-100">
+        <div class="card-body py-3">
+          <div class="fs-2 fw-bold text-primary">{{ records.count }}</div>
+          <div class="text-muted small">Total</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-6 col-md-2">
+      <div class="card text-center border-0 shadow-sm h-100">
+        <div class="card-body py-3">
+          <div class="fs-2 fw-bold text-success">
+            {{ records.filter.present|default:"—" }}
+          </div>
+          <div class="text-muted small">Present</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-6 col-md-2">
+      <div class="card text-center border-0 shadow-sm h-100">
+        <div class="card-body py-3">
+          <div class="fs-2 fw-bold text-danger">—</div>
+          <div class="text-muted small">Absent</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-6 col-md-2">
+      <div class="card text-center border-0 shadow-sm h-100">
+        <div class="card-body py-3">
+          <div class="fs-2 fw-bold text-warning">—</div>
+          <div class="text-muted small">Late</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-6 col-md-2">
+      <div class="card text-center border-0 shadow-sm h-100">
+        <div class="card-body py-3">
+          <div class="fs-2 fw-bold text-info">—</div>
+          <div class="text-muted small">Excused</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-6 col-md-2">
+      <div class="card text-center border-0 shadow-sm h-100">
+        <div class="card-body py-3">
+          <div class="fs-2 fw-bold text-secondary">—</div>
+          <div class="text-muted small">Remote</div>
+        </div>
+      </div>
+    </div>
+    {% endwith %}
+  </div>
+
+  <!-- Records Table -->
+  <div class="card shadow-sm">
+    <div class="card-header d-flex justify-content-between align-items-center">
+      <h5 class="mb-0">
+        <i class="fas fa-users me-2"></i>Student Attendance Records
+      </h5>
+      {% if not session.is_locked %}
+      <a href="{% url 'attendance:mark' session.pk %}" class="btn btn-sm btn-primary">
+        <i class="fas fa-edit me-1"></i>Mark Attendance
+      </a>
+      {% endif %}
+    </div>
+    <div class="card-body p-0">
+      <div class="table-responsive">
+        <table class="table table-hover mb-0 align-middle">
+          <thead class="table-light">
+            <tr>
+              <th>#</th>
+              <th>Student Name</th>
+              <th>Student ID</th>
+              <th>Status</th>
+              <th>Marked At</th>
+              <th>Notes</th>
+              {% if not session.is_locked %}
+              <th>Action</th>
+              {% endif %}
+            </tr>
+          </thead>
+          <tbody>
+            {% for record in records %}
+            <tr>
+              <td class="text-muted small">{{ forloop.counter }}</td>
+              <td class="fw-semibold">
+                {{ record.enrollment.student.user.get_full_name }}
+              </td>
+              <td class="text-muted small">
+                {{ record.enrollment.student.student_id }}
+              </td>
+              <td>
+                {% if record.status == 'present' %}
+                  <span class="badge bg-success">Present</span>
+                {% elif record.status == 'absent' %}
+                  <span class="badge bg-danger">Absent</span>
+                {% elif record.status == 'late' %}
+                  <span class="badge bg-warning text-dark">Late</span>
+                {% elif record.status == 'excused' %}
+                  <span class="badge bg-info">Excused</span>
+                {% elif record.status == 'remote' %}
+                  <span class="badge bg-secondary">Remote</span>
+                {% else %}
+                  <span class="badge bg-light text-dark">{{ record.status }}</span>
+                {% endif %}
+              </td>
+              <td class="text-muted small">
+                {{ record.marked_at|date:"M d, Y H:i"|default:"—" }}
+              </td>
+              <td class="text-muted small">
+                {{ record.notes|default:"—" }}
+              </td>
+              {% if not session.is_locked %}
+              <td>
+                <a href="{% url 'attendance:update_record' record.pk %}"
+                   class="btn btn-sm btn-outline-primary">
+                  <i class="fas fa-edit"></i>
+                </a>
+              </td>
+              {% endif %}
+            </tr>
+            {% empty %}
+            <tr>
+              <td colspan="7" class="text-center text-muted py-5">
+                <i class="fas fa-clipboard-list fa-3x d-block mb-2 opacity-25"></i>
+                No attendance records yet.
+                {% if not session.is_locked %}
+                <div class="mt-2">
+                  <a href="{% url 'attendance:mark' session.pk %}"
+                     class="btn btn-sm btn-primary">
+                    Mark Attendance Now
+                  </a>
+                </div>
+                {% endif %}
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+</div>
+{% endblock %}

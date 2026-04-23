@@ -5,7 +5,12 @@ Views: Login, Logout, Register, Profile, Password Change,
        User List/Create/Edit/Delete (admin),
        Student & Professor management (admin).
 """
-
+from django.contrib.auth import logout as auth_logout
+from django.contrib import messages
+from django.shortcuts import redirect, get_object_or_404
+from django.views import View
+from django.contrib.auth.mixins import LoginRequiredMixin
+from .models import User
 from django.contrib.auth import login, logout, authenticate, update_session_auth_hash
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
@@ -16,6 +21,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db.models import Q
 from django.http import JsonResponse
 from django.utils import timezone
+from django.shortcuts import render, redirect, get_object_or_404
 
 from .models import User, UserRole, StudentProfile, ProfessorProfile, Department
 from .forms import (
@@ -269,22 +275,36 @@ class UserEditView(AdminRequiredMixin, RoleContextMixin, UpdateView):
         return redirect(self.success_url)
 
 
-class UserDeleteView(AdminRequiredMixin, RoleContextMixin, DeleteView):
-    model = User
-    template_name = 'accounts/admin/user_confirm_delete.html'
-    success_url = reverse_lazy('accounts:user_list')
+class UserDeleteView(LoginRequiredMixin, View):
 
-    def form_valid(self, form):
-        user = self.get_object()
-        if user == self.request.user:
-            messages.error(self.request, 'You cannot delete your own account.')
+    def get(self, request, pk):
+        user_to_delete = get_object_or_404(User, pk=pk)
+        return render(request, 'accounts/admin/user_confirm_delete.html', {
+            'object': user_to_delete
+        })
+    def post(self, request, pk):
+        user_to_delete = get_object_or_404(User, pk=pk)
+
+        if user_to_delete.pk == request.user.pk:
+            messages.error(request, 'You cannot delete your own account.')
             return redirect('accounts:user_list')
-        name = user.get_full_name()
-        response = super().form_valid(form)
-        messages.success(self.request, f'User "{name}" deleted.')
-        return response
 
+        name = user_to_delete.get_full_name()
 
+        # Step 1 — Remove as department head
+        from apps.accounts.models import Department
+        Department.objects.filter(head=user_to_delete).update(head=None)
+
+        # Step 2 — Delete all courses taught by this professor
+        # (this also cascades to enrollments, grades, attendance, assignments)
+        if user_to_delete.is_professor:
+            from apps.courses.models import Course
+            Course.objects.filter(professor=user_to_delete).delete()
+
+        # Step 3 — Now safe to delete the user
+        user_to_delete.delete()
+        messages.success(request, f'User "{name}" and all associated data deleted successfully.')
+        return redirect('accounts:user_list')
 class UserDetailView(AdminRequiredMixin, RoleContextMixin, DetailView):
     model = User
     template_name = 'accounts/admin/user_detail.html'
